@@ -17,7 +17,7 @@ class Client(models.Model):
     )
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} ({self.company})"
+        return f"{self.first_name} {self.last_name} ({self.company}) - Sales contact : {self.sales_contact}"
 
 
 class Contract(models.Model):
@@ -58,5 +58,7 @@ class Note(models.Model):
     event = models.ForeignKey(to=Event, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"Event {self.event.client.company} " \
-               f"({self.event.event_date}): {self.description}"
+        return (
+            f"Event {self.event.client.company} "
+            f"({self.event.event_date}): {self.description}"
+        )

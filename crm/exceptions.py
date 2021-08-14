@@ -18,9 +18,12 @@ class NoClientRegistered(APIException):
 #     default_detail = "No event registered"
 #     default_code = "no_event_registered"
 
+
 class MissingCredentials(APIException):
     status_code = 403
-    default_detail = "Missing credentials: You cannot access the details of this page"
+    default_detail = (
+        "Missing credentials: You cannot access " "the details of this page"
+    )
     default_code = "missing_credentials"
 
 
@@ -40,6 +43,51 @@ class NotInChargeOfEvent(APIException):
     status_code = 403
     default_detail = "You are not in charge of this event"
     default_code = "not_in_charge_of_event"
+
+
+class ClientAttributionError(APIException):
+    status_code = 403
+    default_detail = "Client cannot be attributed to another Sales member"
+    default_code = "client_attribution_error"
+
+
+class NoContractForClient(APIException):
+    status_code = 403
+    default_detail = "No existing contract for this client"
+    default_code = "no_contract_for_client"
+
+
+class ContractNotSigned(APIException):
+    status_code = 403
+    default_detail = "No signed contract for this client"
+    default_code = "no_signed_contract"
+
+
+class NotSalesMember(APIException):
+    status_code = 403
+    default_detail = "Please choose a Sales member for this contract"
+    default_code = "not_sales_member"
+
+
+class NoExistingContractBetweenSellerAndClient(APIException):
+    status_code = 403
+    default_detail = (
+        "No existing contract between seller and client. "
+        "Please choose another seller."
+    )
+    default_code = "no_existing_contract_between_seller_and_client"
+
+
+class ContractAlreadyExists(APIException):
+    status_code = 403
+    default_detail = "A contract already exists with this client."
+    default_code = "contract_already_exists"
+
+
+class ContractAlreadyExistsWithAnotherSeller(APIException):
+    status_code = 403
+    default_detail = "A contract already exists with another seller."
+    default_code = "contract_already_exists_with_another_seller"
 
 
 class ClientNotFound(APIException):
