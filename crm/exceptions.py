@@ -7,18 +7,6 @@ class NoClientRegistered(APIException):
     default_code = "no_client_registered"
 
 
-# class NoContractRegistered(APIException):
-#     status_code = 200
-#     default_detail = "No contract registered"
-#     default_code = "no_contract_registered"
-#
-#
-# class NoEventRegistered(APIException):
-#     status_code = 200
-#     default_detail = "No event registered"
-#     default_code = "no_event_registered"
-
-
 class MissingCredentials(APIException):
     status_code = 403
     default_detail = (
@@ -45,12 +33,6 @@ class NotInChargeOfEvent(APIException):
     default_code = "not_in_charge_of_event"
 
 
-class ClientAttributionError(APIException):
-    status_code = 403
-    default_detail = "Client cannot be attributed to another Sales member"
-    default_code = "client_attribution_error"
-
-
 class NoContractForClient(APIException):
     status_code = 403
     default_detail = "No existing contract for this client"
@@ -69,25 +51,10 @@ class NotSalesMember(APIException):
     default_code = "not_sales_member"
 
 
-class NoExistingContractBetweenSellerAndClient(APIException):
-    status_code = 403
-    default_detail = (
-        "No existing contract between seller and client. "
-        "Please choose another seller."
-    )
-    default_code = "no_existing_contract_between_seller_and_client"
-
-
 class ContractAlreadyExists(APIException):
     status_code = 403
     default_detail = "A contract already exists with this client."
     default_code = "contract_already_exists"
-
-
-class ContractAlreadyExistsWithAnotherSeller(APIException):
-    status_code = 403
-    default_detail = "A contract already exists with another seller."
-    default_code = "contract_already_exists_with_another_seller"
 
 
 class ClientNotFound(APIException):

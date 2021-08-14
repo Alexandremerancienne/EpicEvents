@@ -3,15 +3,13 @@ from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from rest_framework.decorators import action
-
 from accounts.models import User
 from .models import Client, Contract, Event, Note
 from .permissions import (
     IsManagerOrClientSalesContact,
     IsManagerOrContractSalesContact,
     IsManagerOrEventSupportContact,
-    IsManager,
+    IsManager, IsManagerOrNoteEventSupportContact,
 )
 from .serializers import (
     ClientSerializer,
@@ -20,6 +18,7 @@ from .serializers import (
     UserSerializer,
     SalesContractSerializer,
     SalesClientSerializer,
+    NoteSerializer, NotesSerializer,
 )
 from .exceptions import (
     MissingCredentials,
@@ -29,13 +28,10 @@ from .exceptions import (
     NotInChargeOfClient,
     NotInChargeOfContract,
     NotInChargeOfEvent,
-    ClientAttributionError,
     NoContractForClient,
     ContractNotSigned,
     NotSalesMember,
-    NoExistingContractBetweenSellerAndClient,
     ContractAlreadyExists,
-    ContractAlreadyExistsWithAnotherSeller,
 )
 
 
@@ -216,11 +212,6 @@ class EventViewSet(viewsets.ModelViewSet):
         IsAuthenticated,
         IsManagerOrEventSupportContact,
     )
-    #
-    # @action(methods=["get"], detail=True)
-    # def notes(self, request, pk=None):
-    #     data = Note.objects.all()
-    #     return Response(data=data)
 
     def list(self, request):
         user = self.request.user
@@ -333,6 +324,69 @@ class UserViewSet(viewsets.ModelViewSet):
         user = request.user
         if user.role == "management":
             serializer = UserSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            raise MissingCredentials()
+
+
+class NotesViewSet(viewsets.ModelViewSet):
+    queryset = Note.objects.all()
+    serializer_class = NoteSerializer
+    permission_classes = (IsAuthenticated,
+                          IsManagerOrNoteEventSupportContact,)
+
+    def get_serializer_class(self):
+        if self.request.user.role in ["management", "support"]:
+            return NotesSerializer
+
+    def list(self, request, event_pk=None):
+        user = request.user
+        if user.role == "management":
+            queryset = Note.objects.filter(event_id=event_pk)
+        elif user.role == "support":
+            queryset = Note.objects.filter(event__support_contact=user)
+            if queryset.count() == 0:
+                raise NotInChargeOfEvent()
+            else:
+                queryset = Note.objects.filter(event_id=event_pk)
+        elif user.role == "sales":
+            queryset = Note.objects.filter(event_id=event_pk,
+                                           event__client__sales_contact=user)
+            if queryset.count() == 0:
+                raise NotInChargeOfEvent()
+        serializer = NoteSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, event_pk=None, pk=None):
+        user = request.user
+        if user.role == "management":
+            queryset = Note.objects.filter(id=pk, event_id=event_pk)
+        elif user.role == "support":
+            queryset = Note.objects.filter(event__support_contact=user)
+            if queryset.count() == 0:
+                raise NotInChargeOfEvent()
+            else:
+                queryset = Note.objects.filter(id=pk, event_id=event_pk)
+        elif user.role == "sales":
+            queryset = Note.objects.filter(id=pk, event_id=event_pk,
+                                           event__client__sales_contact=user)
+            if queryset.count() == 0:
+                raise NotInChargeOfEvent()
+        serializer = NoteSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def create(self, request, event_pk=None):
+        user = request.user
+        if user.role in ["management", "support"]:
+            event = get_object_or_404(Event, id=event_pk)
+            print("EVENT", event)
+            request_copy = request.data.copy()
+            request_copy["event"] = event.id
+            print("REQUEST COPY", request_copy)
+            serializer = NoteSerializer(data=request_copy)
+            print(serializer)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)

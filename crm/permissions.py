@@ -54,3 +54,21 @@ class IsManager(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         return True if request.user.role == "management" else False
+
+
+class IsManagerOrNoteEventSupportContact(permissions.BasePermission):
+    message = (
+        "Missing credentials: "
+        "Event information can be modified "
+        "only by Management or Support contact"
+    )
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        print("BLABLABLA", obj)
+        return (
+            True
+            if request.user.role == "management" or obj.event.support_contact == request.user
+            else False
+        )

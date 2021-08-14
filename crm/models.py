@@ -55,10 +55,7 @@ class Event(models.Model):
 class Note(models.Model):
 
     description = models.TextField()
-    event = models.ForeignKey(to=Event, on_delete=models.CASCADE)
+    event = models.ForeignKey(to=Event, null=True, on_delete=models.CASCADE)
 
     def __str__(self):
-        return (
-            f"Event {self.event.client.company} "
-            f"({self.event.event_date}): {self.description}"
-        )
+        return f"Event: {self.description}"

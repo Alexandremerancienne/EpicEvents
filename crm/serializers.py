@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Client, Contract, Event
+from .models import Client, Contract, Event, Note
 
 from accounts.models import User
 
@@ -39,3 +39,15 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["id", "username", "password", "role"]
+
+
+class NotesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Note
+        exclude = ("event",)
+
+
+class NoteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Note
+        fields = "__all__"
