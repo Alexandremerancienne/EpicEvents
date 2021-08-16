@@ -47,7 +47,13 @@ class ContractNotSigned(APIException):
 
 class NotSalesMember(APIException):
     status_code = 403
-    default_detail = "Please choose a Sales member for this contract"
+    default_detail = "Please choose a Sales member for Sales contact field"
+    default_code = "not_sales_member"
+
+
+class NotSupportMember(APIException):
+    status_code = 403
+    default_detail = "Please choose a Support member for Support contact field"
     default_code = "not_sales_member"
 
 

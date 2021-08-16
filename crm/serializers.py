@@ -17,7 +17,7 @@ class ClientSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class SalesContractSerializer(serializers.ModelSerializer):
+class SalesAndManagementContractSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contract
         exclude = ("sales_contact",)
@@ -33,6 +33,12 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = "__all__"
+
+
+class UpdateEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        exclude = ("client",)
 
 
 class UserSerializer(serializers.ModelSerializer):

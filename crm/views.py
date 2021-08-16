@@ -16,9 +16,9 @@ from .serializers import (
     ContractSerializer,
     EventSerializer,
     UserSerializer,
-    SalesContractSerializer,
+    SalesAndManagementContractSerializer,
     SalesClientSerializer,
-    NoteSerializer, NotesSerializer,
+    NoteSerializer, NotesSerializer, UpdateEventSerializer,
 )
 from .exceptions import (
     MissingCredentials,
@@ -31,7 +31,7 @@ from .exceptions import (
     NoContractForClient,
     ContractNotSigned,
     NotSalesMember,
-    ContractAlreadyExists,
+    ContractAlreadyExists, NotSupportMember,
 )
 
 
@@ -92,13 +92,18 @@ class ClientViewSet(viewsets.ModelViewSet):
         serializer = ClientSerializer(retrieved_client)
         return Response(serializer.data)
 
-    def create(self, request, pk=None):
+    def create(self, request):
         user = request.user
         if user.role == "management":
-            serializer = ClientSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            sales_contact_field = request.data["sales_contact"]
+            sales_contact = User.objects.filter(id=sales_contact_field, role="sales")
+            if sales_contact.count() == 0:
+                raise NotSalesMember()
+            else:
+                serializer = ClientSerializer(data=request.data)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif user.role == "sales":
             request_copy = request.data.copy()
             request_copy["sales_contact"] = user.id
@@ -108,6 +113,21 @@ class ClientViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             raise MissingCredentials()
+
+    def update(self, request, pk=None):
+        user = request.user
+        if user.role in ["management", "sales"]:
+            sales_contact_field = request.data["sales_contact"]
+            sales_contact = User.objects.filter(id=sales_contact_field, role="sales")
+            if sales_contact.count() == 0:
+                raise NotSalesMember()
+            else:
+                client = Client.objects.get(id=pk)
+                self.check_object_permissions(request, client)
+                serializer = ClientSerializer(client, data=request.data)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                return Response(serializer.data)
 
 
 class ContractViewSet(viewsets.ModelViewSet):
@@ -119,10 +139,10 @@ class ContractViewSet(viewsets.ModelViewSet):
     )
 
     def get_serializer_class(self):
-        if self.request.user.role in ["management", "support"]:
+        if self.request.user.role == "support":
             return ContractSerializer
-        elif self.request.user.role == "sales":
-            return SalesContractSerializer
+        elif self.request.user.role in ["management", "sales"]:
+            return SalesAndManagementContractSerializer
 
     def list(self, request):
         user = self.request.user
@@ -162,26 +182,15 @@ class ContractViewSet(viewsets.ModelViewSet):
     def create(self, request, pk=None):
         user = request.user
         if user.role == "management":
-            sales_contact = get_object_or_404(
-                User, id=int(request.data["sales_contact"])
-            )
-            client = get_object_or_404(Client, id=int(request.data["client"]))
-            if sales_contact.role != "sales":
-                raise NotSalesMember()
-            else:
-                if client.sales_contact.id != int(request.data["sales_contact"]):
-                    raise NotInChargeOfClient()
-                else:
-                    contract = Contract.objects.filter(
-                        client=client, sales_contact=sales_contact
-                    )
-                    if contract.count() != 0:
-                        raise ContractAlreadyExists()
-                    else:
-                        serializer = ContractSerializer(data=request.data)
-                        serializer.is_valid(raise_exception=True)
-                        serializer.save()
-                        return Response(serializer.data, status=status.HTTP_201_CREATED)
+            request_copy = request.data.copy()
+            form_client = request_copy["client"]
+            client = Client.objects.filter(id=form_client)
+            client = client.first()
+            request_copy["sales_contact"] = client.sales_contact.id
+            serializer = ContractSerializer(data=request_copy)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif user.role == "sales":
             client = get_object_or_404(Client, id=int(request.data["client"]))
             contract = Contract.objects.filter(client=client, sales_contact=user)
@@ -204,6 +213,22 @@ class ContractViewSet(viewsets.ModelViewSet):
         else:
             raise MissingCredentials()
 
+    def update(self, request, pk=None):
+        user = request.user
+        if user.role == "management":
+            client_field = request.data["client"]
+            client = Client.objects.filter(id=client_field)
+            client = client.first()
+            sales_contact = client.sales_contact
+            request_copy = request.data.copy()
+            request_copy["sales_contact"] = sales_contact.id
+            contract = Contract.objects.get(id=pk)
+            self.check_object_permissions(request, contract)
+            serializer = ContractSerializer(contract, data=request_copy)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+
 
 class EventViewSet(viewsets.ModelViewSet):
     queryset = Event.objects.all()
@@ -212,6 +237,12 @@ class EventViewSet(viewsets.ModelViewSet):
         IsAuthenticated,
         IsManagerOrEventSupportContact,
     )
+
+    def get_serializer_class(self):
+        if self.request.method == "PUT":
+            return UpdateEventSerializer
+        else:
+            return EventSerializer
 
     def list(self, request):
         user = self.request.user
@@ -292,6 +323,24 @@ class EventViewSet(viewsets.ModelViewSet):
         else:
             raise MissingCredentials()
 
+    def update(self, request, pk=None):
+        user = request.user
+        if user.role == "management":
+            support_contact_id = request.data["support_contact"]
+            support_contact = User.objects.filter(id=support_contact_id)
+            support_contact = support_contact.first()
+            if support_contact.role != "support":
+                raise NotSupportMember()
+            else:
+                request_copy = request.data.copy()
+                event = Event.objects.get(id=pk)
+                request_copy["client"] = event.client.id
+                self.check_object_permissions(request, event)
+                serializer = EventSerializer(event, data=request_copy)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                return Response(serializer.data)
+
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -344,16 +393,16 @@ class NotesViewSet(viewsets.ModelViewSet):
     def list(self, request, event_pk=None):
         user = request.user
         if user.role == "management":
-            queryset = Note.objects.filter(event_id=event_pk)
+            queryset = Note.objects.filter(event_id=event_pk).order_by("id")
         elif user.role == "support":
             queryset = Note.objects.filter(event__support_contact=user)
             if queryset.count() == 0:
                 raise NotInChargeOfEvent()
             else:
-                queryset = Note.objects.filter(event_id=event_pk)
+                queryset = Note.objects.filter(event_id=event_pk).order_by("id")
         elif user.role == "sales":
             queryset = Note.objects.filter(event_id=event_pk,
-                                           event__client__sales_contact=user)
+                                           event__client__sales_contact=user).order_by("id")
             if queryset.count() == 0:
                 raise NotInChargeOfEvent()
         serializer = NoteSerializer(queryset, many=True)
