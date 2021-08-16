@@ -54,7 +54,7 @@ class ClientViewSet(viewsets.ModelViewSet):
         if user.role == "management":
             queryset = Client.objects.all().order_by("last_name")
         elif user.role == "sales":
-            queryset = Client.objects.filter(sales_contact=user)
+            queryset = Client.objects.filter(sales_contact=user).order_by("last_name")
         elif user.role == "support":
             followed_events = Event.objects.filter(support_contact=user)
             followed_events_clients = [event.client.id for event in followed_events]
@@ -116,18 +116,21 @@ class ClientViewSet(viewsets.ModelViewSet):
 
     def update(self, request, pk=None):
         user = request.user
-        if user.role in ["management", "sales"]:
+        if user.role == "management":
             sales_contact_field = request.data["sales_contact"]
             sales_contact = User.objects.filter(id=sales_contact_field, role="sales")
             if sales_contact.count() == 0:
                 raise NotSalesMember()
-            else:
-                client = Client.objects.get(id=pk)
-                self.check_object_permissions(request, client)
-                serializer = ClientSerializer(client, data=request.data)
-                serializer.is_valid(raise_exception=True)
-                serializer.save()
-                return Response(serializer.data)
+        elif user.role == "sales":
+            pass
+        else:
+            raise MissingCredentials()
+        client = Client.objects.get(id=pk)
+        self.check_object_permissions(request, client)
+        serializer = ClientSerializer(client, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
 
 class ContractViewSet(viewsets.ModelViewSet):
