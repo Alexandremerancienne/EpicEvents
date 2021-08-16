@@ -293,13 +293,19 @@ class EventViewSet(viewsets.ModelViewSet):
                 raise NoContractForClient()
             else:
                 contract = client_contract.first()
-                if contract.status is True:
-                    serializer = EventSerializer(data=request.data)
-                    serializer.is_valid(raise_exception=True)
-                    serializer.save()
-                    return Response(serializer.data, status=status.HTTP_201_CREATED)
-                else:
+                if contract.status is False:
                     raise ContractNotSigned()
+                else:
+                    support_contact_id = request.data["support_contact"]
+                    support_contact = User.objects.filter(id=support_contact_id)
+                    support_contact = support_contact.first()
+                    if support_contact.role != "support":
+                        raise NotSupportMember()
+                    else:
+                        serializer = EventSerializer(data=request.data)
+                        serializer.is_valid(raise_exception=True)
+                        serializer.save()
+                        return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif user.role == "sales":
             request_copy = request.data.copy()
             event_client = int(request_copy["client"])
