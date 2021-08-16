@@ -52,7 +52,7 @@ class ClientViewSet(viewsets.ModelViewSet):
     def list(self, request):
         user = self.request.user
         if user.role == "management":
-            queryset = Client.objects.all()
+            queryset = Client.objects.all().order_by("last_name")
         elif user.role == "sales":
             queryset = Client.objects.filter(sales_contact=user)
         elif user.role == "support":
@@ -304,7 +304,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def list(self, request):
         user = self.request.user
         if user.role == "management":
-            queryset = User.objects.all().order_by("id")
+            queryset = User.objects.all().order_by("username")
             serializer = UserSerializer(queryset, many=True)
             return Response(serializer.data)
         else:

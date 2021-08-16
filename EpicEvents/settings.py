@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "accounts.apps.AccountsConfig",
     "crm.apps.ApiConfig",
     "rest_framework",
+    'rest_framework_simplejwt',
 ]
 
 MIDDLEWARE = [
