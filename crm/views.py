@@ -195,42 +195,36 @@ class ContractViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif user.role == "sales":
-            client = get_object_or_404(Client, id=int(request.data["client"]))
-            contract = Contract.objects.filter(client=client, sales_contact=user)
-            if contract.count() != 0:
-                raise ContractAlreadyExists()
+            request_copy = request.data.copy()
+            request_copy["sales_contact"] = user.id
+
+            user_clients = Client.objects.filter(sales_contact=request.user.id)
+            clients_id = [client.id for client in user_clients]
+
+            if int(request_copy["client"]) in clients_id:
+                serializer = ContractSerializer(data=request_copy)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
             else:
-                request_copy = request.data.copy()
-                request_copy["sales_contact"] = user.id
-
-                user_clients = Client.objects.filter(sales_contact=request.user.id)
-                clients_id = [client.id for client in user_clients]
-
-                if int(request_copy["client"]) in clients_id:
-                    serializer = ContractSerializer(data=request_copy)
-                    serializer.is_valid(raise_exception=True)
-                    serializer.save()
-                    return Response(serializer.data, status=status.HTTP_201_CREATED)
-                else:
-                    raise NotInChargeOfClient()
+                raise NotInChargeOfClient()
         else:
             raise MissingCredentials()
 
     def update(self, request, pk=None):
         user = request.user
-        if user.role == "management":
-            client_field = request.data["client"]
-            client = Client.objects.filter(id=client_field)
-            client = client.first()
-            sales_contact = client.sales_contact
-            request_copy = request.data.copy()
-            request_copy["sales_contact"] = sales_contact.id
+        if user.role in ["management", "sales"]:
             contract = Contract.objects.get(id=pk)
+            request_copy = request.data.copy()
+            request_copy["client"] = contract.client.id
+            request_copy["sales_contact"] = contract.sales_contact.id
             self.check_object_permissions(request, contract)
             serializer = ContractSerializer(contract, data=request_copy)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data)
+        else:
+            raise MissingCredentials()
 
 
 class EventViewSet(viewsets.ModelViewSet):

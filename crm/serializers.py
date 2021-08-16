@@ -20,7 +20,7 @@ class ClientSerializer(serializers.ModelSerializer):
 class SalesAndManagementContractSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contract
-        exclude = ("sales_contact",)
+        exclude = ("client", "sales_contact",)
 
 
 class ContractSerializer(serializers.ModelSerializer):
