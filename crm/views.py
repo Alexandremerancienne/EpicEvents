@@ -21,7 +21,8 @@ from .serializers import (
     SalesClientSerializer,
     NoteSerializer,
     NotesSerializer,
-    UpdateEventSerializer,
+    SupportEventSerializer,
+    ManagementEventSerializer,
 )
 from .exceptions import (
     MissingCredentials,
@@ -248,8 +249,13 @@ class EventViewSet(viewsets.ModelViewSet):
     )
 
     def get_serializer_class(self):
-        if self.request.method == "PUT":
-            return UpdateEventSerializer
+        if self.request.method == "PUT"\
+                and self.request.user.role == "management":
+            return ManagementEventSerializer
+        elif self.request.method == "PUT"\
+                and self.request.user.role == "support":
+            return SupportEventSerializer
+
         else:
             return EventSerializer
 
@@ -361,6 +367,18 @@ class EventViewSet(viewsets.ModelViewSet):
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
                 return Response(serializer.data)
+        if user.role == "support":
+            request_copy = request.data.copy()
+            event = Event.objects.get(id=pk)
+            request_copy["client"] = event.client.id
+            request_copy["support_client"] = user.id
+            self.check_object_permissions(request, event)
+            serializer = EventSerializer(event, data=request_copy)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            raise MissingCredentials()
 
 
 class UserViewSet(viewsets.ModelViewSet):

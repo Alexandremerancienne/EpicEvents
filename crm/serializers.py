@@ -14,7 +14,7 @@ class SalesClientSerializer(serializers.ModelSerializer):
 class ClientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Client
-        fields = "__all__"
+        exclude = ("date_created", "date_updated")
 
 
 class SalesAndManagementContractSerializer(serializers.ModelSerializer):
@@ -23,6 +23,8 @@ class SalesAndManagementContractSerializer(serializers.ModelSerializer):
         exclude = (
             "client",
             "sales_contact",
+            "date_created",
+            "date_updated"
         )
 
 
@@ -38,10 +40,19 @@ class EventSerializer(serializers.ModelSerializer):
         exclude = ("date_created", "date_updated")
 
 
-class UpdateEventSerializer(serializers.ModelSerializer):
+class SupportEventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
-        exclude = ("client",)
+        exclude = ("date_created", "date_updated",
+                   "support_contact", "client")
+
+
+class ManagementEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        exclude = ("date_created",
+                   "date_updated",
+                   "client",)
 
 
 class UserSerializer(serializers.ModelSerializer):
