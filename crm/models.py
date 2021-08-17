@@ -45,9 +45,9 @@ class Event(models.Model):
     support_contact = models.ForeignKey(
         to=settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL
     )
-    event_status = models.BooleanField()
+    event_over = models.BooleanField(default=False)
     attendees = models.IntegerField()
-    event_date = models.DateTimeField()
+    event_date = models.DateTimeField(null=True)
 
     def __str__(self):
         return f"Event {self.client.company} ({self.event_date})"

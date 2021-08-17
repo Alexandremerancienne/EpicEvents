@@ -21,7 +21,6 @@ class SalesAndManagementContractSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contract
         exclude = (
-            "client",
             "sales_contact",
             "date_created",
             "date_updated"
@@ -33,6 +32,7 @@ class ContractSerializer(serializers.ModelSerializer):
         model = Contract
         exclude = ("date_created",
                    "date_updated")
+    status = serializers.BooleanField(required=True)
 
 
 class EventSerializer(serializers.ModelSerializer):

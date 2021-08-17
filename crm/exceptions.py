@@ -63,6 +63,25 @@ class ContractAlreadyExists(APIException):
     default_code = "contract_already_exists"
 
 
+class ContractMustBeSigned(APIException):
+    status_code = 403
+    default_detail = "To create an event, " \
+                     "the contract associated to your client must be signed"
+    default_code = "contract_must_be_signed"
+
+
+class EventOver(APIException):
+    status_code = 403
+    default_detail = "Event over. To update status, please contact Management."
+    default_code = "event_over"
+
+
+class ContractAlreadySigned(APIException):
+    status_code = 403
+    default_detail = "Contract already signed. To terminate contract, please delete it."
+    default_code = "contract_already_signed"
+
+
 class ClientNotFound(APIException):
     status_code = 404
     default_detail = "Client not found"

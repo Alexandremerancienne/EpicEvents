@@ -32,10 +32,10 @@ from .exceptions import (
     NotInChargeOfClient,
     NotInChargeOfContract,
     NotInChargeOfEvent,
-    NoContractForClient,
-    ContractNotSigned,
     NotSalesMember,
     NotSupportMember,
+    EventOver,
+    ContractAlreadySigned,
 )
 
 
@@ -202,17 +202,28 @@ class ContractViewSet(viewsets.ModelViewSet):
             client = Client.objects.filter(id=form_client)
             client = client.first()
             request_copy["sales_contact"] = client.sales_contact.id
+            if "status" in request_copy.keys():
+                new_event = Event(client=client, attendees=0)
+                new_event.save()
+            else:
+                pass
             serializer = ContractSerializer(data=request_copy)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif user.role == "sales":
             request_copy = request.data.copy()
+            form_client = request_copy["client"]
+            client = Client.objects.filter(id=form_client)
+            client = client.first()
             request_copy["sales_contact"] = user.id
-
             user_clients = Client.objects.filter(sales_contact=request.user.id)
             clients_id = [client.id for client in user_clients]
-
+            if "status" in request_copy.keys():
+                new_event = Event(client=client, attendees=0)
+                new_event.save()
+            else:
+                pass
             if int(request_copy["client"]) in clients_id:
                 serializer = ContractSerializer(data=request_copy)
                 serializer.is_valid(raise_exception=True)
@@ -231,6 +242,13 @@ class ContractViewSet(viewsets.ModelViewSet):
             request_copy = request.data.copy()
             request_copy["client"] = contract.client.id
             request_copy["sales_contact"] = contract.sales_contact.id
+            if not contract.status and "status" in request_copy.keys():
+                new_event = Event(client=contract.client, attendees=0)
+                new_event.save()
+            elif contract.status and "status" not in request_copy.keys():
+                raise ContractAlreadySigned()
+            else:
+                pass
             self.check_object_permissions(request, contract)
             serializer = ContractSerializer(contract, data=request_copy)
             serializer.is_valid(raise_exception=True)
@@ -255,7 +273,6 @@ class EventViewSet(viewsets.ModelViewSet):
         elif self.request.method == "PUT"\
                 and self.request.user.role == "support":
             return SupportEventSerializer
-
         else:
             return EventSerializer
 
@@ -300,58 +317,10 @@ class EventViewSet(viewsets.ModelViewSet):
         serializer = EventSerializer(retrieved_event)
         return Response(serializer.data)
 
-    def create(self, request, pk=None):
-        user = request.user
-        if user.role == "management":
-            request_copy = request.data.copy()
-            event_client = int(request_copy["client"])
-            client_contract = Contract.objects.filter(client=event_client)
-            if client_contract.count() == 0:
-                raise NoContractForClient()
-            else:
-                contract = client_contract.first()
-                if contract.status is False:
-                    raise ContractNotSigned()
-                else:
-                    support_contact_id = request.data["support_contact"]
-                    support_contact =\
-                        User.objects.filter(id=support_contact_id)
-                    support_contact = support_contact.first()
-                    if support_contact.role != "support":
-                        raise NotSupportMember()
-                    else:
-                        serializer = EventSerializer(data=request.data)
-                        serializer.is_valid(raise_exception=True)
-                        serializer.save()
-                        return Response(serializer.data,
-                                        status=status.HTTP_201_CREATED)
-        elif user.role == "sales":
-            request_copy = request.data.copy()
-            event_client = int(request_copy["client"])
-            client_contract = Contract.objects.filter(client=event_client)
-            if client_contract.count() == 0:
-                raise NoContractForClient()
-            else:
-                contract = client_contract.first()
-                if contract.status is False:
-                    raise ContractNotSigned()
-                else:
-                    user_clients =\
-                        Client.objects.filter(sales_contact=request.user.id)
-                    clients_id = [client.id for client in user_clients]
-                    if int(request_copy["client"]) in clients_id:
-                        serializer = EventSerializer(data=request_copy)
-                        serializer.is_valid(raise_exception=True)
-                        serializer.save()
-                        return Response(serializer.data,
-                                        status=status.HTTP_201_CREATED)
-                    else:
-                        raise NotInChargeOfClient()
-        else:
-            raise MissingCredentials()
-
     def update(self, request, pk=None):
         user = request.user
+        event = get_object_or_404(Event, id=pk)
+
         if user.role == "management":
             support_contact_id = request.data["support_contact"]
             support_contact = User.objects.filter(id=support_contact_id)
@@ -369,9 +338,14 @@ class EventViewSet(viewsets.ModelViewSet):
                 return Response(serializer.data)
         if user.role == "support":
             request_copy = request.data.copy()
-            event = Event.objects.get(id=pk)
             request_copy["client"] = event.client.id
             request_copy["support_client"] = user.id
+            if not event.event_over and "status" in request_copy.keys():
+                pass
+            elif event.event_over and "status" not in request_copy.keys():
+                raise EventOver()
+            else:
+                pass
             self.check_object_permissions(request, event)
             serializer = EventSerializer(event, data=request_copy)
             serializer.is_valid(raise_exception=True)
@@ -479,12 +453,9 @@ class NotesViewSet(viewsets.ModelViewSet):
         user = request.user
         if user.role in ["management", "support"]:
             event = get_object_or_404(Event, id=event_pk)
-            print("EVENT", event)
             request_copy = request.data.copy()
             request_copy["event"] = event.id
-            print("REQUEST COPY", request_copy)
             serializer = NoteSerializer(data=request_copy)
-            print(serializer)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
