@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from accounts.models import User
+from .filters import UserFilter, ClientFilter, ContractFilter, EventFilter
 from .models import Client, Contract, Event, Note
 from .permissions import (
     IsManagerOrClientSalesContact,
@@ -46,6 +47,7 @@ class ClientViewSet(viewsets.ModelViewSet):
         IsAuthenticated,
         IsManagerOrClientSalesContact,
     )
+    filterset_class = ClientFilter
 
     def get_serializer_class(self):
         if self.request.user.role in ["management", "support"]:
@@ -56,15 +58,15 @@ class ClientViewSet(viewsets.ModelViewSet):
     def list(self, request):
         user = self.request.user
         if user.role == "management":
-            queryset = Client.objects.all().order_by("last_name")
+            queryset = self.filter_queryset(Client.objects.all().order_by("last_name"))
         elif user.role == "sales":
             queryset =\
-                Client.objects.filter(sales_contact=user).order_by("last_name")
+                self.filter_queryset(Client.objects.filter(sales_contact=user).order_by("last_name"))
         elif user.role == "support":
             followed_events = Event.objects.filter(support_contact=user)
             followed_events_clients =\
                 [event.client.id for event in followed_events]
-            queryset = Client.objects.filter(id__in=followed_events_clients)
+            queryset = self.filter_queryset(Client.objects.filter(id__in=followed_events_clients))
         else:
             raise MissingCredentials()
         serializer = ClientSerializer(queryset, many=True)
@@ -151,6 +153,7 @@ class ContractViewSet(viewsets.ModelViewSet):
         IsAuthenticated,
         IsManagerOrContractSalesContact,
     )
+    filterset_class = ContractFilter
 
     def get_serializer_class(self):
         if self.request.user.role == "support":
@@ -161,10 +164,10 @@ class ContractViewSet(viewsets.ModelViewSet):
     def list(self, request):
         user = self.request.user
         if user.role == "management":
-            queryset = Contract.objects.all().order_by("id")
+            queryset = self.filter_queryset(Contract.objects.all().order_by("id"))
         elif user.role == "sales":
             queryset =\
-                Contract.objects.filter(sales_contact=user).order_by("id")
+                self.filter_queryset(Contract.objects.filter(sales_contact=user).order_by("id"))
         elif user.role == "support":
             raise MissingCredentials()
         else:
@@ -265,6 +268,7 @@ class EventViewSet(viewsets.ModelViewSet):
         IsAuthenticated,
         IsManagerOrEventSupportContact,
     )
+    filterset_class = EventFilter
 
     def get_serializer_class(self):
         if self.request.method == "PUT"\
@@ -279,12 +283,12 @@ class EventViewSet(viewsets.ModelViewSet):
     def list(self, request):
         user = self.request.user
         if user.role == "management":
-            queryset = Event.objects.all().order_by("event_date")
+            queryset = self.filter_queryset(Event.objects.all().order_by("event_date"))
         elif user.role == "sales":
-            queryset = Event.objects.filter(client__sales_contact=user)
+            queryset = self.filter_queryset(Event.objects.filter(client__sales_contact=user))
             queryset.order_by("event_date")
         elif user.role == "support":
-            queryset = Event.objects.filter(support_contact=user)
+            queryset = self.filter_queryset(Event.objects.filter(support_contact=user))
             queryset.order_by("event_date")
         else:
             raise MissingCredentials()
@@ -355,44 +359,6 @@ class EventViewSet(viewsets.ModelViewSet):
             raise MissingCredentials()
 
 
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = (
-        IsAuthenticated,
-        IsManager,
-    )
-
-    def list(self, request):
-        user = self.request.user
-        if user.role == "management":
-            queryset = User.objects.all().order_by("username")
-            serializer = UserSerializer(queryset, many=True)
-            return Response(serializer.data)
-        else:
-            raise MissingCredentials()
-
-    def retrieve(self, request, pk=None):
-        user = request.user
-        if user.role == "management":
-            queryset = User.objects.filter(id=pk)
-            retrieved_user = queryset.first()
-            serializer = UserSerializer(retrieved_user)
-            return Response(serializer.data)
-        else:
-            raise MissingCredentials()
-
-    def create(self, request, pk=None):
-        user = request.user
-        if user.role == "management":
-            serializer = UserSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            raise MissingCredentials()
-
-
 class NotesViewSet(viewsets.ModelViewSet):
     queryset = Note.objects.all()
     serializer_class = NoteSerializer
@@ -456,6 +422,45 @@ class NotesViewSet(viewsets.ModelViewSet):
             request_copy = request.data.copy()
             request_copy["event"] = event.id
             serializer = NoteSerializer(data=request_copy)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            raise MissingCredentials()
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = (
+        IsAuthenticated,
+        IsManager,
+    )
+    filterset_class = UserFilter
+
+    def list(self, request):
+        user = self.request.user
+        if user.role == "management":
+            queryset = self.filter_queryset(User.objects.all().order_by("username"))
+            serializer = UserSerializer(queryset, many=True)
+            return Response(serializer.data)
+        else:
+            raise MissingCredentials()
+
+    def retrieve(self, request, pk=None):
+        user = request.user
+        if user.role == "management":
+            queryset = User.objects.filter(id=pk)
+            retrieved_user = queryset.first()
+            serializer = UserSerializer(retrieved_user)
+            return Response(serializer.data)
+        else:
+            raise MissingCredentials()
+
+    def create(self, request, pk=None):
+        user = request.user
+        if user.role == "management":
+            serializer = UserSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
