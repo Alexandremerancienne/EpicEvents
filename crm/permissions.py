@@ -8,7 +8,8 @@ class IsManagerOrSalesContact(permissions.BasePermission):
         sales_contact = obj.sales_contact
         return (
             True
-            if request.user.role == "management" or sales_contact == request.user
+            if request.user.role == "management"
+            or sales_contact == request.user
             else False
         )
 
@@ -42,13 +43,16 @@ class IsManagerOrEventSupportContact(permissions.BasePermission):
         support_contact = obj.support_contact
         return (
             True
-            if request.user.role == "management" or support_contact == request.user
+            if request.user.role == "management"
+            or support_contact == request.user
             else False
         )
 
 
 class IsManager(permissions.BasePermission):
-    message = "Missing credentials: " "User can be deleted " "only by Management"
+    message = "Missing credentials: " \
+              "User can be deleted " \
+              "only by Management"
 
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
@@ -69,6 +73,7 @@ class IsManagerOrNoteEventSupportContact(permissions.BasePermission):
         print("BLABLABLA", obj)
         return (
             True
-            if request.user.role == "management" or obj.event.support_contact == request.user
+            if request.user.role == "management"
+            or obj.event.support_contact == request.user
             else False
         )

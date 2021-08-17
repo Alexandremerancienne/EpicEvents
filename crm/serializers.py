@@ -20,7 +20,10 @@ class ClientSerializer(serializers.ModelSerializer):
 class SalesAndManagementContractSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contract
-        exclude = ("client", "sales_contact",)
+        exclude = (
+            "client",
+            "sales_contact",
+        )
 
 
 class ContractSerializer(serializers.ModelSerializer):
@@ -32,7 +35,7 @@ class ContractSerializer(serializers.ModelSerializer):
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
-        fields = "__all__"
+        exclude = ("date_created", "date_updated")
 
 
 class UpdateEventSerializer(serializers.ModelSerializer):
@@ -47,7 +50,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ["id", "username", "password", "role"]
 
     def create(self, validated_data):
-        password = validated_data.pop('password', None)
+        password = validated_data.pop("password", None)
         instance = self.Meta.model(**validated_data)
         if password is not None:
             instance.set_password(password)
@@ -56,7 +59,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         for attr, value in validated_data.items():
-            if attr == 'password':
+            if attr == "password":
                 instance.set_password(value)
             else:
                 setattr(instance, attr, value)
