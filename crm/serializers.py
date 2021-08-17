@@ -31,7 +31,8 @@ class SalesAndManagementContractSerializer(serializers.ModelSerializer):
 class ContractSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contract
-        fields = "__all__"
+        exclude = ("date_created",
+                   "date_updated")
 
 
 class EventSerializer(serializers.ModelSerializer):
@@ -58,7 +59,7 @@ class ManagementEventSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "username", "password", "role"]
+        fields = ["id", "username", "role"]
 
     def create(self, validated_data):
         password = validated_data.pop("password", None)
