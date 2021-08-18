@@ -36,7 +36,7 @@ from .exceptions import (
     NotSalesMember,
     NotSupportMember,
     EventOver,
-    ContractAlreadySigned,
+    ContractAlreadySigned, ContractMustBeSigned,
 )
 
 
@@ -188,8 +188,6 @@ class ContractViewSet(viewsets.ModelViewSet):
                 raise ContractNotFound()
             elif contract.count() != 0 and queryset.count() == 0:
                 raise NotInChargeOfContract()
-        elif user.role == "support":
-            raise NotInChargeOfContract()
         else:
             raise MissingCredentials()
 
@@ -294,6 +292,9 @@ class EventViewSet(viewsets.ModelViewSet):
             raise MissingCredentials()
         serializer = EventSerializer(queryset, many=True)
         return Response(serializer.data)
+
+    def create(self, request):
+        raise ContractMustBeSigned()
 
     def retrieve(self, request, pk=None):
         user = request.user
@@ -412,7 +413,8 @@ class NotesViewSet(viewsets.ModelViewSet):
             )
             if queryset.count() == 0:
                 raise NotInChargeOfEvent()
-        serializer = NoteSerializer(queryset, many=True)
+        retrieved_note = queryset.first()
+        serializer = NoteSerializer(retrieved_note)
         return Response(serializer.data)
 
     def create(self, request, event_pk=None):
