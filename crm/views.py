@@ -379,7 +379,8 @@ class NotesViewSet(viewsets.ModelViewSet):
         if user.role == "management":
             queryset = Note.objects.filter(event_id=event_pk).order_by("id")
         elif user.role == "support":
-            queryset = Note.objects.filter(event_id=event_pk, event__support_contact=user)
+            queryset = Note.objects.filter(event_id=event_pk,
+                                           event__support_contact=user)
             if queryset.count() == 0:
                 raise NotInChargeOfEvent()
             else:
@@ -419,16 +420,27 @@ class NotesViewSet(viewsets.ModelViewSet):
 
     def create(self, request, event_pk=None):
         user = request.user
-        if user.role in ["management", "support"]:
-            event = get_object_or_404(Event, id=event_pk)
-            request_copy = request.data.copy()
-            request_copy["event"] = event.id
-            serializer = NoteSerializer(data=request_copy)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
+        if user.role == "sales":
             raise MissingCredentials()
+        elif user.role == "management":
+            event = Event.objects.filter(id=event_pk)
+            if event.count() == 0:
+                raise EventNotFound()
+            else:
+                event = event.first()
+        elif user.role == "support":
+            event = Event.objects.filter(id=event_pk,
+                                         support_contact=user)
+            if event.count() == 0:
+                raise NotInChargeOfEvent()
+            else:
+                event = event.first()
+        request_copy = request.data.copy()
+        request_copy["event"] = event.id
+        serializer = NoteSerializer(data=request_copy)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class UserViewSet(viewsets.ModelViewSet):
