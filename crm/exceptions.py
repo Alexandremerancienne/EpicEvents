@@ -82,6 +82,12 @@ class ContractAlreadySigned(APIException):
     default_code = "contract_already_signed"
 
 
+class ForbiddenPassword(APIException):
+    status_code = 403
+    default_detail = "This password is not secure. Please choose another passsword."
+    default_code = "forbidden_password"
+
+
 class ClientNotFound(APIException):
     status_code = 404
     default_detail = "Client not found"

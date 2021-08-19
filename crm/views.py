@@ -23,7 +23,7 @@ from .serializers import (
     NoteSerializer,
     NotesSerializer,
     SupportEventSerializer,
-    ManagementEventSerializer,
+    ManagementEventSerializer, GetUserSerializer,
 )
 from .exceptions import (
     MissingCredentials,
@@ -36,7 +36,7 @@ from .exceptions import (
     NotSalesMember,
     NotSupportMember,
     EventOver,
-    ContractAlreadySigned, ContractMustBeSigned,
+    ContractAlreadySigned, ContractMustBeSigned, ForbiddenPassword,
 )
 
 
@@ -456,7 +456,7 @@ class UserViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.role == "management":
             queryset = self.filter_queryset(User.objects.all().order_by("username"))
-            serializer = UserSerializer(queryset, many=True)
+            serializer = GetUserSerializer(queryset, many=True)
             return Response(serializer.data)
         else:
             raise MissingCredentials()
@@ -466,17 +466,38 @@ class UserViewSet(viewsets.ModelViewSet):
         if user.role == "management":
             queryset = User.objects.filter(id=pk)
             retrieved_user = queryset.first()
-            serializer = UserSerializer(retrieved_user)
+            serializer = GetUserSerializer(retrieved_user)
             return Response(serializer.data)
         else:
             raise MissingCredentials()
 
-    def create(self, request, pk=None):
+    def create(self, request):
         user = request.user
         if user.role == "management":
-            serializer = UserSerializer(data=request.data)
+            request_copy = request.data.copy()
+            request_copy["password"] = "epicevents"
+            serializer = UserSerializer(data=request_copy)
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            data = {
+                "id": serializer.data["id"],
+                "username": serializer.data["username"],
+                "role": serializer.data["role"],
+                    }
+            return Response(data, status=status.HTTP_201_CREATED)
+        else:
+            raise MissingCredentials()
+
+    def update(self, request, pk=None):
+        updated_user = get_object_or_404(User, id=pk)
+        if updated_user == request.user:
+            if request.data["password"] == "epicevents":
+                raise ForbiddenPassword()
+            serializer = UserSerializer(updated_user, data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            response_serializer = GetUserSerializer(updated_user, data=request.data)
+            response_serializer.is_valid(raise_exception=True)
+            return Response(response_serializer.data)
         else:
             raise MissingCredentials()
