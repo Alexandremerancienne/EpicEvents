@@ -36,7 +36,7 @@ from .exceptions import (
     NotSalesMember,
     NotSupportMember,
     EventOver,
-    ContractAlreadySigned, ContractMustBeSigned, ForbiddenPassword,
+    ContractAlreadySigned, ContractMustBeSigned,
 )
 
 
@@ -474,9 +474,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def create(self, request):
         user = request.user
         if user.role == "management":
-            request_copy = request.data.copy()
-            request_copy["password"] = "epicevents"
-            serializer = UserSerializer(data=request_copy)
+            serializer = UserSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             data = {
@@ -491,8 +489,6 @@ class UserViewSet(viewsets.ModelViewSet):
     def update(self, request, pk=None):
         updated_user = get_object_or_404(User, id=pk)
         if updated_user == request.user:
-            if request.data["password"] == "epicevents":
-                raise ForbiddenPassword()
             serializer = UserSerializer(updated_user, data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
