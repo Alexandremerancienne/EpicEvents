@@ -26,7 +26,7 @@ from .serializers import (
     UserSerializer,
     SalesClientSerializer,
     NoteSerializer,
-    NotesSerializer,
+    ManagementAndSupportNoteSerializer,
     SupportEventSerializer,
     ManagementEventSerializer,
     GetUserSerializer,
@@ -406,7 +406,7 @@ class NotesViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.request.user.role in ["management", "support"]:
-            return NotesSerializer
+            return ManagementAndSupportNoteSerializer
         else:
             return NoteSerializer
 

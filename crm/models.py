@@ -4,6 +4,7 @@ from django.conf import settings
 
 class Client(models.Model):
 
+    objects = None
     first_name = models.CharField(max_length=25)
     last_name = models.CharField(max_length=25)
     email = models.CharField(max_length=100)
