@@ -53,6 +53,7 @@ class ClientViewSet(viewsets.ModelViewSet):
     A ViewSet for listing, retrieving, creating, updating
     and deleting clients.
     """
+
     queryset = Client.objects.all()
     serializer_class = ClientSerializer
     permission_classes = (
@@ -161,6 +162,7 @@ class ContractViewSet(viewsets.ModelViewSet):
     A ViewSet for listing, retrieving, creating, updating
     and deleting contracts.
     """
+
     queryset = Contract.objects.all()
     serializer_class = ContractSerializer
     permission_classes = (
@@ -295,6 +297,7 @@ class EventViewSet(viewsets.ModelViewSet):
     A ViewSet for listing, retrieving, creating, updating
     and deleting events.
     """
+
     queryset = Event.objects.all()
     serializer_class = EventSerializer
     permission_classes = (
@@ -391,6 +394,7 @@ class NotesViewSet(viewsets.ModelViewSet):
     A ViewSet for listing, retrieving, creating, updating
     and deleting event notes.
     """
+
     queryset = Note.objects.all()
     serializer_class = NoteSerializer
     permission_classes = (
@@ -489,6 +493,7 @@ class UserViewSet(viewsets.ModelViewSet):
     A ViewSet for listing, retrieving, creating, updating
     and deleting users.
     """
+
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (
