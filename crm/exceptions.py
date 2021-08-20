@@ -63,20 +63,3 @@ class ContractAlreadySigned(APIException):
     )
     default_code = "contract_already_signed"
 
-
-class ClientNotFound(APIException):
-    status_code = 404
-    default_detail = "Client not found"
-    default_code = "client_not_found"
-
-
-class ContractNotFound(APIException):
-    status_code = 404
-    default_detail = "Contract not found"
-    default_code = "contract_not_found"
-
-
-class EventNotFound(APIException):
-    status_code = 404
-    default_detail = "Event not found"
-    default_code = "event_not_found"
