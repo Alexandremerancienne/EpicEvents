@@ -158,6 +158,7 @@ class ContractViewSet(viewsets.ModelViewSet):
         IsAuthenticated,
         IsManagerOrContractSalesContact,
     )
+    filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = ContractFilter
 
     def get_serializer_class(self):
@@ -288,6 +289,7 @@ class EventViewSet(viewsets.ModelViewSet):
         IsAuthenticated,
         IsManagerOrEventSupportContact,
     )
+    filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = EventFilter
 
     def get_serializer_class(self):

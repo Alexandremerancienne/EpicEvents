@@ -17,7 +17,6 @@ class ClientFilter(filters.FilterSet):
     first_name = filters.CharFilter(field_name="first_name", lookup_expr='iexact')
     last_name = filters.CharFilter(field_name="last_name", lookup_expr='iexact')
     company = filters.CharFilter(field_name="company", lookup_expr='iexact')
-    sales_contact = filters.NumberFilter(field_name="sales_contact", lookup_expr='exact')
 
     class Meta:
         model = Client
@@ -33,19 +32,11 @@ class ContractFilter(filters.FilterSet):
 
     class Meta:
         model = Contract
-        fields = {
-            'status': ['exact'],
-            'client': ['exact'],
-            'sales_contact': ['exact'],
-        }
+        fields = ['status', 'client', 'sales_contact']
 
 
 class EventFilter(filters.FilterSet):
 
     class Meta:
         model = Event
-        fields = {
-            'event_over': ['exact'],
-            'client': ['exact'],
-            'support_contact': ['exact'],
-        }
+        fields = ['event_over', 'client', 'support_contact']
