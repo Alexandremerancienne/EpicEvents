@@ -144,6 +144,7 @@ class ClientViewSet(viewsets.ModelViewSet):
 
     def update(self, request, pk=None):
         user = request.user
+        client = get_object_or_404(Client, id=pk)
         if user.role == "management":
             sales_contact_field = request.data["sales_contact"]
             sales_contact =\
@@ -259,10 +260,10 @@ class ContractViewSet(viewsets.ModelViewSet):
 
     def update(self, request, pk=None):
         user = request.user
-        contract = get_object_or_404(Contract, id=pk)
         if user.role == "support":
             raise MissingCredentials()
         elif user.role == "management":
+            contract = get_object_or_404(Contract, id=pk)
             if contract.status:
                 raise ContractAlreadySigned()
             else:
@@ -275,6 +276,7 @@ class ContractViewSet(viewsets.ModelViewSet):
                     client = get_object_or_404(Client, id=form_client)
                     request_copy["sales_contact"] = client.sales_contact.id
         elif user.role == "sales":
+            contract = get_object_or_404(Contract, id=pk)
             if contract.status:
                 raise ContractAlreadySigned()
             else:
@@ -287,8 +289,6 @@ class ContractViewSet(viewsets.ModelViewSet):
                     client = get_object_or_404(Client,
                                                id=request_copy["client"])
                     request_copy["sales_contact"] = client.sales_contact.id
-        else:
-            raise MissingCredentials()
         self.check_object_permissions(request, contract)
         serializer = ContractSerializer(contract, data=request_copy)
         serializer.is_valid(raise_exception=True)
@@ -367,7 +367,6 @@ class EventViewSet(viewsets.ModelViewSet):
     def update(self, request, pk=None):
         user = request.user
         event = get_object_or_404(Event, id=pk)
-
         if user.role == "management":
             support_contact_id = request.data["support_contact"]
             support_contact = User.objects.filter(id=support_contact_id)
