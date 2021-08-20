@@ -4,7 +4,8 @@ from rest_framework.exceptions import APIException
 class MissingCredentials(APIException):
     status_code = 403
     default_detail = (
-        "Missing credentials: You cannot access " "the details of this page"
+        "Missing credentials: You cannot access "
+        "the details of this page"
     )
     default_code = "missing_credentials"
 
@@ -62,4 +63,3 @@ class ContractAlreadySigned(APIException):
         "To terminate contract, please delete it."
     )
     default_code = "contract_already_signed"
-
