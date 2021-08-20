@@ -405,13 +405,12 @@ class NotesViewSet(viewsets.ModelViewSet):
         if user.role == "management":
             queryset = self.filter_queryset(Note.objects.filter(event_id=event_pk).order_by("id"))
         elif user.role == "support":
-            queryset = self.filter_queryset(Note.objects.filter(event_id=event_pk,
-                                                                event__support_contact=user))
+            queryset = Note.objects.filter(event_id=event_pk, event__support_contact=user)
             if queryset.count() == 0:
                 raise NotInChargeOfEvent()
             else:
                 queryset =\
-                    Note.objects.filter(event_id=event_pk).order_by("id")
+                    self.filter_queryset(Note.objects.filter(event_id=event_pk).order_by("id"))
         elif user.role == "sales":
             event = Event.objects.filter(id=event_pk, client__sales_contact=user)
             if event.count() == 0:
