@@ -81,6 +81,7 @@ class ClientViewSet(viewsets.ModelViewSet):
             queryset = self.filter_queryset(queryset)
         else:
             raise MissingCredentials()
+
         serializer = ClientSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -143,6 +144,7 @@ class ClientViewSet(viewsets.ModelViewSet):
             pass
         else:
             raise MissingCredentials()
+
         self.check_object_permissions(request, client)
         serializer = ClientSerializer(client, data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -181,6 +183,7 @@ class ContractViewSet(viewsets.ModelViewSet):
             raise MissingCredentials()
         else:
             raise MissingCredentials()
+
         serializer = ContractSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -242,9 +245,7 @@ class ContractViewSet(viewsets.ModelViewSet):
 
     def update(self, request, pk=None):
         user = request.user
-        if user.role == "support":
-            raise MissingCredentials()
-        elif user.role == "management":
+        if user.role == "management":
             contract = get_object_or_404(Contract, id=pk)
             if contract.status:
                 raise ContractAlreadySigned()
@@ -271,6 +272,9 @@ class ContractViewSet(viewsets.ModelViewSet):
                     client = get_object_or_404(Client,
                                                id=request_copy["client"])
                     request_copy["sales_contact"] = client.sales_contact.id
+        else:
+            raise MissingCredentials()
+
         self.check_object_permissions(request, contract)
         serializer = ContractSerializer(contract, data=request_copy)
         serializer.is_valid(raise_exception=True)
@@ -313,6 +317,7 @@ class EventViewSet(viewsets.ModelViewSet):
             queryset = self.filter_queryset(queryset)
         else:
             raise MissingCredentials()
+
         serializer = EventSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -348,14 +353,10 @@ class EventViewSet(viewsets.ModelViewSet):
                 raise NotSupportMember()
             else:
                 request_copy = request.data.copy()
-                event = Event.objects.get(id=pk)
                 request_copy["client"] = event.client.id
-                self.check_object_permissions(request, event)
-                serializer = EventSerializer(event, data=request_copy)
-                serializer.is_valid(raise_exception=True)
-                serializer.save()
-                return Response(serializer.data)
-        if user.role == "support":
+        elif user.role == "sales":
+            raise MissingCredentials()
+        elif user.role == "support":
             request_copy = request.data.copy()
             request_copy["client"] = event.client.id
             request_copy["support_client"] = user.id
@@ -365,13 +366,12 @@ class EventViewSet(viewsets.ModelViewSet):
                 raise EventOver()
             else:
                 pass
-            self.check_object_permissions(request, event)
-            serializer = EventSerializer(event, data=request_copy)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data)
-        else:
-            raise MissingCredentials()
+
+        self.check_object_permissions(request, event)
+        serializer = EventSerializer(event, data=request_copy)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
 
 class NotesViewSet(viewsets.ModelViewSet):
@@ -419,6 +419,7 @@ class NotesViewSet(viewsets.ModelViewSet):
                     )
                 queryset = queryset.order_by("id")
                 queryset = self.filter_queryset(queryset)
+
         serializer = NoteSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -442,6 +443,7 @@ class NotesViewSet(viewsets.ModelViewSet):
                     and retrieved_event is not None \
                     and retrieved_note is not None:
                 raise NotInChargeOfEvent()
+
         serializer = NoteSerializer(retrieved_note)
         return Response(serializer.data)
 
@@ -457,6 +459,7 @@ class NotesViewSet(viewsets.ModelViewSet):
                 raise NotInChargeOfEvent()
             else:
                 event = event.first()
+
         request_copy = request.data.copy()
         request_copy["event"] = event.id
         serializer = NoteSerializer(data=request_copy)
