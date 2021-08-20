@@ -90,16 +90,12 @@ class ClientViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, pk=None):
         user = request.user
-        client = Client.objects.filter(id=pk)
         if user.role == "management":
-            queryset = Client.objects.filter(id=pk)
-            if queryset.count() == 0:
-                raise ClientNotFound()
+            retrieved_client = get_object_or_404(Client, id=pk)
         elif user.role == "sales":
             queryset = Client.objects.filter(id=pk, sales_contact=user)
-            if client.count() == 0 and queryset.count() == 0:
-                raise ClientNotFound()
-            elif client.count() != 0 and queryset.count() == 0:
+            retrieved_client = get_object_or_404(Client, id=pk)
+            if retrieved_client is not None and queryset.count() == 0:
                 raise NotInChargeOfClient()
         elif user.role == "support":
             followed_events = Event.objects.filter(support_contact=user)
@@ -107,14 +103,10 @@ class ClientViewSet(viewsets.ModelViewSet):
                 [event.client.id for event in followed_events]
             queryset =\
                 Client.objects.filter(id__in=followed_events_clients, id=pk)
-            if client.count() == 0 and queryset.count() == 0:
-                raise ClientNotFound()
-            elif client.count() != 0 and queryset.count() == 0:
+            retrieved_client = get_object_or_404(Client, id=pk)
+            if retrieved_client is not None and queryset.count() == 0:
                 raise NotInChargeOfClient()
-        else:
-            raise MissingCredentials()
 
-        retrieved_client = queryset.first()
         serializer = ClientSerializer(retrieved_client)
         return Response(serializer.data)
 
@@ -199,21 +191,16 @@ class ContractViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, pk=None):
         user = request.user
-        contract = Contract.objects.filter(id=pk)
         if user.role == "management":
-            queryset = Contract.objects.filter(id=pk)
-            if queryset.count() == 0:
-                raise ContractNotFound()
+            retrieved_contract = get_object_or_404(Contract, id=pk)
         elif user.role == "sales":
             queryset = Contract.objects.filter(id=pk, sales_contact=user)
-            if contract.count() == 0 and queryset.count() == 0:
-                raise ContractNotFound()
-            elif contract.count() != 0 and queryset.count() == 0:
+            retrieved_contract = get_object_or_404(Contract, id=pk)
+            if retrieved_contract is not None and queryset.count() == 0:
                 raise NotInChargeOfContract()
         else:
             raise MissingCredentials()
 
-        retrieved_contract = queryset.first()
         serializer = ContractSerializer(retrieved_contract)
         return Response(serializer.data)
 
@@ -514,8 +501,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, pk=None):
         user = request.user
         if user.role == "management":
-            queryset = User.objects.filter(id=pk)
-            retrieved_user = queryset.first()
+            retrieved_user = get_object_or_404(User, id=pk)
             serializer = GetUserSerializer(retrieved_user)
             return Response(serializer.data)
         else:

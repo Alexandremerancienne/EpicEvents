@@ -5,15 +5,21 @@ from .models import Client, Contract, Event, Note
 from accounts.models import User
 
 
+class ClientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Client
+        exclude = ("date_created", "date_updated")
+
+
 class SalesClientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Client
         exclude = ("sales_contact",)
 
 
-class ClientSerializer(serializers.ModelSerializer):
+class ContractSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Client
+        model = Contract
         exclude = ("date_created", "date_updated")
 
 
@@ -36,12 +42,6 @@ class SalesContractSerializer(serializers.ModelSerializer):
             "date_updated",
             "client",
         )
-
-
-class ContractSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Contract
-        exclude = ("date_created", "date_updated")
 
 
 class EventSerializer(serializers.ModelSerializer):
@@ -93,13 +93,13 @@ class GetUserSerializer(serializers.ModelSerializer):
         fields = ["id", "username", "role"]
 
 
-class NotesSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Note
-        exclude = ("event",)
-
-
 class NoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Note
         fields = "__all__"
+
+
+class NotesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Note
+        exclude = ("event",)

@@ -1,12 +1,6 @@
 from rest_framework.exceptions import APIException
 
 
-class NoClientRegistered(APIException):
-    status_code = 200
-    default_detail = "No client registered"
-    default_code = "no_client_registered"
-
-
 class MissingCredentials(APIException):
     status_code = 403
     default_detail = (
@@ -33,18 +27,6 @@ class NotInChargeOfEvent(APIException):
     default_code = "not_in_charge_of_event"
 
 
-class NoContractForClient(APIException):
-    status_code = 403
-    default_detail = "No existing contract for this client"
-    default_code = "no_contract_for_client"
-
-
-class ContractNotSigned(APIException):
-    status_code = 403
-    default_detail = "No signed contract for this client"
-    default_code = "no_signed_contract"
-
-
 class NotSalesMember(APIException):
     status_code = 403
     default_detail = "Please choose a Sales member for Sales contact field"
@@ -55,12 +37,6 @@ class NotSupportMember(APIException):
     status_code = 403
     default_detail = "Please choose a Support member for Support contact field"
     default_code = "not_sales_member"
-
-
-class ContractAlreadyExists(APIException):
-    status_code = 403
-    default_detail = "A contract already exists with this client."
-    default_code = "contract_already_exists"
 
 
 class ContractMustBeSigned(APIException):
