@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from accounts.models import User
-from .filters import UserFilter, ClientFilter, ContractFilter, EventFilter
+from .filters import ClientFilter, ContractFilter, EventFilter, UserFilter
 from .models import Client, Contract, Event, Note
 from .permissions import (
     IsManagerOrClientSalesContact,
@@ -18,12 +18,14 @@ from .serializers import (
     ContractSerializer,
     EventSerializer,
     UserSerializer,
-    SalesAndManagementContractSerializer,
     SalesClientSerializer,
     NoteSerializer,
     NotesSerializer,
     SupportEventSerializer,
-    ManagementEventSerializer, GetUserSerializer,
+    ManagementEventSerializer,
+    GetUserSerializer,
+    ManagementContractSerializer,
+    SalesContractSerializer,
 )
 from .exceptions import (
     MissingCredentials,
@@ -38,6 +40,8 @@ from .exceptions import (
     EventOver,
     ContractAlreadySigned, ContractMustBeSigned,
 )
+
+from django_filters import rest_framework as filters
 
 
 class ClientViewSet(viewsets.ModelViewSet):
@@ -158,8 +162,10 @@ class ContractViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.request.user.role == "support":
             return ContractSerializer
-        elif self.request.user.role in ["management", "sales"]:
-            return SalesAndManagementContractSerializer
+        elif self.request.user.role == "management":
+            return ManagementContractSerializer
+        elif self.request.user.role == "sales":
+            return SalesContractSerializer
 
     def list(self, request):
         user = self.request.user
@@ -238,25 +244,40 @@ class ContractViewSet(viewsets.ModelViewSet):
 
     def update(self, request, pk=None):
         user = request.user
-        if user.role in ["management", "sales"]:
-            contract = Contract.objects.get(id=pk)
-            request_copy = request.data.copy()
-            request_copy["client"] = contract.client.id
-            request_copy["sales_contact"] = contract.sales_contact.id
-            if not contract.status and "status" in request_copy.keys():
-                new_event = Event(client=contract.client, attendees=0)
-                new_event.save()
-            elif contract.status and "status" not in request_copy.keys():
+        contract = get_object_or_404(Contract, id=pk)
+        if user.role == "support":
+            raise MissingCredentials()
+        elif user.role == "management":
+            if contract.status:
                 raise ContractAlreadySigned()
             else:
-                pass
-            self.check_object_permissions(request, contract)
-            serializer = ContractSerializer(contract, data=request_copy)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data)
+                request_copy = request.data.copy()
+                if "status" in request_copy.keys():
+                    new_event = Event(client=contract.client, attendees=0)
+                    new_event.save()
+                else:
+                    form_client = request_copy["client"]
+                    client = get_object_or_404(Client, id=form_client)
+                    request_copy["sales_contact"] = client.sales_contact.id
+        elif user.role == "sales":
+            if contract.status:
+                raise ContractAlreadySigned()
+            else:
+                request_copy = request.data.copy()
+                if "status" in request_copy.keys():
+                    new_event = Event(client=contract.client, attendees=0)
+                    new_event.save()
+                else:
+                    request_copy["client"] = contract.client.id
+                    client = get_object_or_404(Client, id=request_copy["client"])
+                    request_copy["sales_contact"] = client.sales_contact.id
         else:
             raise MissingCredentials()
+        self.check_object_permissions(request, contract)
+        serializer = ContractSerializer(contract, data=request_copy)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
 
 class EventViewSet(viewsets.ModelViewSet):
@@ -450,6 +471,7 @@ class UserViewSet(viewsets.ModelViewSet):
         IsAuthenticated,
         IsManager,
     )
+    filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = UserFilter
 
     def list(self, request):

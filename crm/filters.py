@@ -5,13 +5,11 @@ from crm.models import Client, Contract, Event
 
 
 class UserFilter(filters.FilterSet):
+    username_contains = filters.CharFilter(field_name="username", lookup_expr='icontains')
 
     class Meta:
         model = User
-        fields = {
-            'username': ['icontains'],
-            'role': ['iexact'],
-        }
+        fields = ['username', 'role', 'username_contains']
 
 
 class ClientFilter(filters.FilterSet):

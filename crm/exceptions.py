@@ -78,7 +78,9 @@ class EventOver(APIException):
 
 class ContractAlreadySigned(APIException):
     status_code = 403
-    default_detail = "Contract already signed. To terminate contract, please delete it."
+    default_detail = "Contract already signed. " \
+                     "To change details, please sign a new contract. " \
+                     "To terminate contract, please delete it."
     default_code = "contract_already_signed"
 
 
