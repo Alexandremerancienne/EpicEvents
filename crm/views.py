@@ -327,27 +327,19 @@ class EventViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, pk=None):
         user = request.user
-        event = Event.objects.filter(id=pk)
         if user.role == "management":
-            queryset = Event.objects.filter(id=pk)
-            if queryset.count() == 0:
-                raise EventNotFound()
+            retrieved_event = get_object_or_404(Event, id=pk)
         elif user.role == "sales":
             queryset = Event.objects.filter(id=pk, client__sales_contact=user)
-            if event.count() == 0 and queryset.count() == 0:
-                raise EventNotFound()
-            elif event.count() != 0 and queryset.count() == 0:
+            retrieved_event = get_object_or_404(Event, id=pk)
+            if retrieved_event is not None and queryset.count() == 0:
                 raise NotInChargeOfEvent()
         elif user.role == "support":
             queryset = Event.objects.filter(id=pk, support_contact=user)
-            if event.count() == 0 and queryset.count() == 0:
-                raise EventNotFound()
-            elif event.count() != 0 and queryset.count() == 0:
+            retrieved_event = get_object_or_404(Event, id=pk)
+            if retrieved_event is not None and queryset.count() == 0:
                 raise NotInChargeOfEvent()
-        else:
-            raise MissingCredentials()
 
-        retrieved_event = queryset.first()
         serializer = EventSerializer(retrieved_event)
         return Response(serializer.data)
 
@@ -437,20 +429,23 @@ class NotesViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, event_pk=None, pk=None):
         user = request.user
         if user.role == "management":
-            queryset = Note.objects.filter(id=pk, event_id=event_pk)
+            retrieved_note = get_object_or_404(Note, id=pk, event_id=event_pk)
         elif user.role == "support":
             queryset = Note.objects.filter(event__support_contact=user)
-            if queryset.count() == 0:
+            retrieved_event = get_object_or_404(Event, id=event_pk)
+            if queryset.count() == 0 and retrieved_event is not None:
                 raise NotInChargeOfEvent()
-            else:
-                queryset = Note.objects.filter(id=pk, event_id=event_pk)
+            retrieved_note = get_object_or_404(Note, id=pk, event_id=event_pk)
         elif user.role == "sales":
             queryset = Note.objects.filter(
                 id=pk, event_id=event_pk, event__client__sales_contact=user
             )
-            if queryset.count() == 0:
+            retrieved_event = get_object_or_404(Event, id=event_pk)
+            retrieved_note = get_object_or_404(Note, id=pk)
+            if queryset.count() == 0 \
+                    and retrieved_event is not None \
+                    and retrieved_note is not None:
                 raise NotInChargeOfEvent()
-        retrieved_note = queryset.first()
         serializer = NoteSerializer(retrieved_note)
         return Response(serializer.data)
 
