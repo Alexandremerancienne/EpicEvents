@@ -3,8 +3,7 @@ from rest_framework_nested import routers
 from django.conf.urls import url
 from django.urls import include, path
 from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView
+    TokenObtainPairView, TokenRefreshView
 )
 
 from .views import (

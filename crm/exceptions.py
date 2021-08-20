@@ -65,8 +65,10 @@ class ContractAlreadyExists(APIException):
 
 class ContractMustBeSigned(APIException):
     status_code = 403
-    default_detail = "The contract associated to your client must be signed " \
-                     "to create an event."
+    default_detail = (
+        "The contract associated to your client must be signed "
+        "to create an event."
+    )
     default_code = "contract_must_be_signed"
 
 
@@ -78,9 +80,11 @@ class EventOver(APIException):
 
 class ContractAlreadySigned(APIException):
     status_code = 403
-    default_detail = "Contract already signed. " \
-                     "To change details, please sign a new contract. " \
-                     "To terminate contract, please delete it."
+    default_detail = (
+        "Contract already signed. "
+        "To change details, please sign a new contract. "
+        "To terminate contract, please delete it."
+    )
     default_code = "contract_already_signed"
 
 

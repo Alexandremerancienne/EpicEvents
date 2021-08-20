@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('crm', '0005_alter_contract_status'),
+        ("crm", "0005_alter_contract_status"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='event',
-            name='event_over',
+            model_name="event",
+            name="event_over",
             field=models.BooleanField(default=False),
         ),
     ]

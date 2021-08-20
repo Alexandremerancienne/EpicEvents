@@ -4,7 +4,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from accounts.models import User
-from .filters import ClientFilter, ContractFilter, EventFilter, UserFilter, NoteFilter
+from .filters import (
+    ClientFilter,
+    ContractFilter,
+    EventFilter,
+    UserFilter,
+    NoteFilter
+)
 from .models import Client, Contract, Event, Note
 from .permissions import (
     IsManagerOrClientSalesContact,
@@ -38,7 +44,8 @@ from .exceptions import (
     NotSalesMember,
     NotSupportMember,
     EventOver,
-    ContractAlreadySigned, ContractMustBeSigned,
+    ContractAlreadySigned,
+    ContractMustBeSigned,
 )
 
 from django_filters import rest_framework as filters
@@ -63,15 +70,19 @@ class ClientViewSet(viewsets.ModelViewSet):
     def list(self, request):
         user = self.request.user
         if user.role == "management":
-            queryset = self.filter_queryset(Client.objects.all().order_by("last_name"))
+            queryset = Client.objects.all().order_by("last_name")
+            queryset = self.filter_queryset(queryset)
         elif user.role == "sales":
-            queryset =\
-                self.filter_queryset(Client.objects.filter(sales_contact=user).order_by("last_name"))
+            queryset = self.filter_queryset(
+                Client.objects.filter(sales_contact=user).order_by("last_name")
+            )
         elif user.role == "support":
             followed_events = Event.objects.filter(support_contact=user)
             followed_events_clients =\
                 [event.client.id for event in followed_events]
-            queryset = self.filter_queryset(Client.objects.filter(id__in=followed_events_clients))
+            queryset = self.filter_queryset(
+                Client.objects.filter(id__in=followed_events_clients)
+            )
         else:
             raise MissingCredentials()
         serializer = ClientSerializer(queryset, many=True)
@@ -111,8 +122,8 @@ class ClientViewSet(viewsets.ModelViewSet):
         user = request.user
         if user.role == "management":
             sales_contact_field = request.data["sales_contact"]
-            sales_contact =\
-                User.objects.filter(id=sales_contact_field, role="sales")
+            sales_contact = User.objects.filter(id=sales_contact_field,
+                                                role="sales")
             if sales_contact.count() == 0:
                 raise NotSalesMember()
             else:
@@ -135,8 +146,8 @@ class ClientViewSet(viewsets.ModelViewSet):
         user = request.user
         if user.role == "management":
             sales_contact_field = request.data["sales_contact"]
-            sales_contact = User.objects.filter(id=sales_contact_field,
-                                                role="sales")
+            sales_contact =\
+                User.objects.filter(id=sales_contact_field, role="sales")
             if sales_contact.count() == 0:
                 raise NotSalesMember()
         elif user.role == "sales":
@@ -172,10 +183,12 @@ class ContractViewSet(viewsets.ModelViewSet):
     def list(self, request):
         user = self.request.user
         if user.role == "management":
-            queryset = self.filter_queryset(Contract.objects.all().order_by("id"))
-        elif user.role == "sales":
             queryset =\
-                self.filter_queryset(Contract.objects.filter(sales_contact=user).order_by("id"))
+                self.filter_queryset(Contract.objects.all().order_by("id"))
+        elif user.role == "sales":
+            queryset = self.filter_queryset(
+                Contract.objects.filter(sales_contact=user).order_by("id")
+            )
         elif user.role == "support":
             raise MissingCredentials()
         else:
@@ -271,7 +284,8 @@ class ContractViewSet(viewsets.ModelViewSet):
                     new_event.save()
                 else:
                     request_copy["client"] = contract.client.id
-                    client = get_object_or_404(Client, id=request_copy["client"])
+                    client = get_object_or_404(Client,
+                                               id=request_copy["client"])
                     request_copy["sales_contact"] = client.sales_contact.id
         else:
             raise MissingCredentials()
@@ -293,11 +307,11 @@ class EventViewSet(viewsets.ModelViewSet):
     filterset_class = EventFilter
 
     def get_serializer_class(self):
-        if self.request.method == "PUT"\
-                and self.request.user.role == "management":
+        if self.request.method == \
+                "PUT" and self.request.user.role == "management":
             return ManagementEventSerializer
-        elif self.request.method == "PUT"\
-                and self.request.user.role == "support":
+        elif self.request.method \
+                == "PUT" and self.request.user.role == "support":
             return SupportEventSerializer
         else:
             return EventSerializer
@@ -305,12 +319,16 @@ class EventViewSet(viewsets.ModelViewSet):
     def list(self, request):
         user = self.request.user
         if user.role == "management":
-            queryset = self.filter_queryset(Event.objects.all().order_by("event_date"))
+            queryset = Event.objects.all().order_by("event_date")
+            queryset = self.filter_queryset(queryset)
         elif user.role == "sales":
-            queryset = self.filter_queryset(Event.objects.filter(client__sales_contact=user))
+            queryset = self.filter_queryset(
+                Event.objects.filter(client__sales_contact=user)
+            )
             queryset.order_by("event_date")
         elif user.role == "support":
-            queryset = self.filter_queryset(Event.objects.filter(support_contact=user))
+            queryset = Event.objects.filter(support_contact=user)
+            queryset = self.filter_queryset(queryset)
             queryset.order_by("event_date")
         else:
             raise MissingCredentials()
@@ -403,21 +421,30 @@ class NotesViewSet(viewsets.ModelViewSet):
     def list(self, request, event_pk=None):
         user = request.user
         if user.role == "management":
-            queryset = self.filter_queryset(Note.objects.filter(event_id=event_pk).order_by("id"))
+            queryset = self.filter_queryset(
+                Note.objects.filter(event_id=event_pk).order_by("id")
+            )
         elif user.role == "support":
-            queryset = Note.objects.filter(event_id=event_pk, event__support_contact=user)
+            queryset = Note.objects.filter(
+                event_id=event_pk, event__support_contact=user
+            )
             if queryset.count() == 0:
                 raise NotInChargeOfEvent()
             else:
-                queryset =\
-                    self.filter_queryset(Note.objects.filter(event_id=event_pk).order_by("id"))
+                queryset = self.filter_queryset(
+                    Note.objects.filter(event_id=event_pk).order_by("id")
+                )
         elif user.role == "sales":
-            event = Event.objects.filter(id=event_pk, client__sales_contact=user)
+            event = Event.objects.filter(id=event_pk,
+                                         client__sales_contact=user)
             if event.count() == 0:
                 raise NotInChargeOfEvent()
             else:
-                queryset = self.filter_queryset(Note.objects.filter(
-                    event_id=event_pk, event__client__sales_contact=user).order_by("id"))
+                queryset = self.filter_queryset(
+                    Note.objects.filter(
+                        event_id=event_pk, event__client__sales_contact=user
+                    ).order_by("id")
+                )
         serializer = NoteSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -452,8 +479,7 @@ class NotesViewSet(viewsets.ModelViewSet):
             else:
                 event = event.first()
         elif user.role == "support":
-            event = Event.objects.filter(id=event_pk,
-                                         support_contact=user)
+            event = Event.objects.filter(id=event_pk, support_contact=user)
             if event.count() == 0:
                 raise NotInChargeOfEvent()
             else:
@@ -479,7 +505,8 @@ class UserViewSet(viewsets.ModelViewSet):
     def list(self, request):
         user = self.request.user
         if user.role == "management":
-            queryset = self.filter_queryset(User.objects.all().order_by("username"))
+            queryset =\
+                self.filter_queryset(User.objects.all().order_by("username"))
             serializer = GetUserSerializer(queryset, many=True)
             return Response(serializer.data)
         else:
@@ -505,7 +532,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 "id": serializer.data["id"],
                 "username": serializer.data["username"],
                 "role": serializer.data["role"],
-                    }
+            }
             return Response(data, status=status.HTTP_201_CREATED)
         else:
             raise MissingCredentials()
@@ -516,7 +543,8 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer = UserSerializer(updated_user, data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            response_serializer = GetUserSerializer(updated_user, data=request.data)
+            response_serializer = GetUserSerializer(updated_user,
+                                                    data=request.data)
             response_serializer.is_valid(raise_exception=True)
             return Response(response_serializer.data)
         else:

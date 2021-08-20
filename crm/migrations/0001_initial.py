@@ -64,7 +64,8 @@ class Migration(migrations.Migration):
                 (
                     "client",
                     models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE, to="crm.client"
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="crm.client"
                     ),
                 ),
                 (
@@ -93,7 +94,8 @@ class Migration(migrations.Migration):
                 (
                     "event",
                     models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE, to="crm.event"
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="crm.event"
                     ),
                 ),
             ],
@@ -118,7 +120,8 @@ class Migration(migrations.Migration):
                 (
                     "client",
                     models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE, to="crm.client"
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="crm.client"
                     ),
                 ),
                 (

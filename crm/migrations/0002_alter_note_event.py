@@ -15,7 +15,8 @@ class Migration(migrations.Migration):
             model_name="note",
             name="event",
             field=models.ForeignKey(
-                null=True, on_delete=django.db.models.deletion.CASCADE, to="crm.event"
+                null=True, on_delete=django.db.models.deletion.CASCADE,
+                to="crm.event"
             ),
         ),
     ]

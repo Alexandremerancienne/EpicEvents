@@ -6,17 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('crm', '0003_rename_event_status_event_event_over'),
+        ("crm", "0003_rename_event_status_event_event_over"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='event',
-            name='event_over',
+            model_name="event",
+            name="event_over",
         ),
         migrations.AlterField(
-            model_name='contract',
-            name='status',
+            model_name="contract",
+            name="status",
             field=models.BooleanField(),
         ),
     ]

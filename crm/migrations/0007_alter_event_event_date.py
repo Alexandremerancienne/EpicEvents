@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('crm', '0006_event_event_over'),
+        ("crm", "0006_event_event_over"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='event',
-            name='event_date',
+            model_name="event",
+            name="event_date",
             field=models.DateTimeField(blank=True),
         ),
     ]

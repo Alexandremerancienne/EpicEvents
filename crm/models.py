@@ -17,8 +17,10 @@ class Client(models.Model):
     )
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} " \
-               f"({self.company}) - Sales contact : {self.sales_contact}"
+        return (
+            f"{self.first_name} {self.last_name} "
+            f"({self.company}) - Sales contact : {self.sales_contact}"
+        )
 
 
 class Contract(models.Model):
