@@ -51,6 +51,7 @@ class ClientViewSet(viewsets.ModelViewSet):
         IsAuthenticated,
         IsManagerOrClientSalesContact,
     )
+    filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = ClientFilter
 
     def get_serializer_class(self):
