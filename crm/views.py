@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from accounts.models import User
-from .filters import ClientFilter, ContractFilter, EventFilter, UserFilter
+from .filters import ClientFilter, ContractFilter, EventFilter, UserFilter, NoteFilter
 from .models import Client, Contract, Event, Note
 from .permissions import (
     IsManagerOrClientSalesContact,
@@ -391,6 +391,8 @@ class NotesViewSet(viewsets.ModelViewSet):
         IsAuthenticated,
         IsManagerOrNoteEventSupportContact,
     )
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = NoteFilter
 
     def get_serializer_class(self):
         if self.request.user.role in ["management", "support"]:
@@ -401,24 +403,22 @@ class NotesViewSet(viewsets.ModelViewSet):
     def list(self, request, event_pk=None):
         user = request.user
         if user.role == "management":
-            queryset = Note.objects.filter(event_id=event_pk).order_by("id")
+            queryset = self.filter_queryset(Note.objects.filter(event_id=event_pk).order_by("id"))
         elif user.role == "support":
-            queryset = Note.objects.filter(event_id=event_pk,
-                                           event__support_contact=user)
+            queryset = self.filter_queryset(Note.objects.filter(event_id=event_pk,
+                                                                event__support_contact=user))
             if queryset.count() == 0:
                 raise NotInChargeOfEvent()
             else:
                 queryset =\
                     Note.objects.filter(event_id=event_pk).order_by("id")
         elif user.role == "sales":
-            event = Event.objects.filter(id=event_pk,
-                                         client__sales_contact=user)
+            event = Event.objects.filter(id=event_pk, client__sales_contact=user)
             if event.count() == 0:
                 raise NotInChargeOfEvent()
             else:
-                queryset = Note.objects.filter(
-                    event_id=event_pk, event__client__sales_contact=user
-                ).order_by("id")
+                queryset = self.filter_queryset(Note.objects.filter(
+                    event_id=event_pk, event__client__sales_contact=user).order_by("id"))
         serializer = NoteSerializer(queryset, many=True)
         return Response(serializer.data)
 

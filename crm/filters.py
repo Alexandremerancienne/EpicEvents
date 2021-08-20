@@ -1,7 +1,7 @@
 from django_filters import rest_framework as filters
 
 from accounts.models import User
-from crm.models import Client, Contract, Event
+from crm.models import Client, Contract, Event, Note
 
 
 class UserFilter(filters.FilterSet):
@@ -40,3 +40,12 @@ class EventFilter(filters.FilterSet):
     class Meta:
         model = Event
         fields = ['event_over', 'client', 'support_contact']
+
+
+class NoteFilter(filters.FilterSet):
+    description__contains = filters.CharFilter(field_name="description", lookup_expr='icontains')
+
+    class Meta:
+        model = Note
+        fields = ['description__contains']
+
