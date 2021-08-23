@@ -495,10 +495,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     queryset = User.objects.all().order_by("username")
     serializer_class = UserSerializer
-    permission_classes = (
-        IsAuthenticated,
-        IsManager,
-    )
+    permission_classes = (IsAuthenticated, IsManager,)
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = UserFilter
 
