@@ -1,15 +1,6 @@
 from rest_framework.exceptions import APIException
 
 
-class MissingCredentials(APIException):
-    status_code = 403
-    default_detail = (
-        "Missing credentials: You cannot access "
-        "the details of this page"
-    )
-    default_code = "missing_credentials"
-
-
 class CannotUpdateProfile(APIException):
     status_code = 403
     default_detail = (
@@ -17,6 +8,24 @@ class CannotUpdateProfile(APIException):
         "this profile"
     )
     default_code = "cannot_update_profile"
+
+
+class CannotCreateNote(APIException):
+    status_code = 403
+    default_detail = (
+        "Missing credentials: Notes can be created "
+        "only by Management members or event's support contact"
+    )
+    default_code = "cannot_create_note"
+
+
+class CannotCreateClient(APIException):
+    status_code = 403
+    default_detail = (
+        "Missing credentials: Clients can be created "
+        "only by Management or Sales members"
+    )
+    default_code = "cannot_create_client"
 
 
 class NotInChargeOfClient(APIException):
