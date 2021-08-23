@@ -81,20 +81,13 @@ class ManagementEventSerializer(serializers.ModelSerializer):
         )
 
 
-class GetUserSerializer(serializers.ModelSerializer):
-    """Serializer for the list of users for GET requests."""
-
-    class Meta:
-        model = User
-        fields = ["id", "username", "role"]
-
-
 class UserSerializer(serializers.ModelSerializer):
-    """Serializer for the list of users for POST and PUT requests."""
+    """Serializer for the User model."""
 
     class Meta:
         model = User
         fields = ["id", "username", "role", "password"]
+        extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
         instance = self.Meta.model(**validated_data)

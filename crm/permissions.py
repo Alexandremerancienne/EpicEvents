@@ -50,8 +50,11 @@ class IsManagerOrEventSupportContact(permissions.BasePermission):
 
 
 class IsManager(permissions.BasePermission):
-    message = "Missing credentials: User can be deleted " \
-              "only by Management"
+    message = "Missing credentials: Users can be read or edited " \
+              "only by Management members"
+
+    def has_permission(self, request, view):
+        return True if request.user.role == "management" else False
 
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:

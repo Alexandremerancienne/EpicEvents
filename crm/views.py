@@ -29,7 +29,6 @@ from .serializers import (
     ManagementAndSupportNoteSerializer,
     SupportEventSerializer,
     ManagementEventSerializer,
-    GetUserSerializer,
     ManagementContractSerializer,
     SalesContractSerializer,
 )
@@ -42,7 +41,7 @@ from .exceptions import (
     NotSupportMember,
     EventOver,
     ContractAlreadySigned,
-    ContractMustBeSigned,
+    ContractMustBeSigned, CannotUpdateProfile,
 )
 
 from django_filters import rest_framework as filters
@@ -494,7 +493,7 @@ class UserViewSet(viewsets.ModelViewSet):
     and deleting users.
     """
 
-    queryset = User.objects.all()
+    queryset = User.objects.all().order_by("username")
     serializer_class = UserSerializer
     permission_classes = (
         IsAuthenticated,
@@ -503,39 +502,11 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = UserFilter
 
-    def list(self, request):
-        user = self.request.user
-        if user.role == "management":
-            queryset = User.objects.all().order_by("username")
-            queryset = self.filter_queryset(queryset)
-            serializer = GetUserSerializer(queryset, many=True)
-            return Response(serializer.data)
-        else:
-            raise MissingCredentials()
-
-    def retrieve(self, request, pk=None):
-        user = request.user
-        if user.role == "management":
-            retrieved_user = get_object_or_404(User, id=pk)
-            serializer = GetUserSerializer(retrieved_user)
-            return Response(serializer.data)
-        else:
-            raise MissingCredentials()
-
     def create(self, request):
-        user = request.user
-        if user.role == "management":
-            serializer = UserSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            data = {
-                "id": serializer.data["id"],
-                "username": serializer.data["username"],
-                "role": serializer.data["role"],
-            }
-            return Response(data, status=status.HTTP_201_CREATED)
-        else:
-            raise MissingCredentials()
+        serializer = UserSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def update(self, request, pk=None):
         updated_user = get_object_or_404(User, id=pk)
@@ -543,9 +514,6 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer = UserSerializer(updated_user, data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            response_serializer = GetUserSerializer(updated_user,
-                                                    data=request.data)
-            response_serializer.is_valid(raise_exception=True)
-            return Response(response_serializer.data)
+            return Response(serializer.data)
         else:
-            raise MissingCredentials()
+            raise CannotUpdateProfile()

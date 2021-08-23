@@ -10,6 +10,15 @@ class MissingCredentials(APIException):
     default_code = "missing_credentials"
 
 
+class CannotUpdateProfile(APIException):
+    status_code = 403
+    default_detail = (
+        "Missing credentials: You cannot update "
+        "this profile"
+    )
+    default_code = "cannot_update_profile"
+
+
 class NotInChargeOfClient(APIException):
     status_code = 403
     default_detail = "You are not in charge of this client"
