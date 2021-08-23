@@ -1,54 +1,6 @@
 from rest_framework import permissions
 
 
-class IsManagerOrSalesContact(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        sales_contact = obj.sales_contact
-        return (
-            True
-            if request.user.role
-            == "management" or sales_contact == request.user
-            else False
-        )
-
-
-class IsManagerOrClientSalesContact(IsManagerOrSalesContact):
-    message = (
-        "Missing credentials: "
-        "Client information can be modified "
-        "only by Management or Sales contact"
-    )
-
-
-class IsManagerOrContractSalesContact(IsManagerOrSalesContact):
-    message = (
-        "Missing credentials: "
-        "Contract information can be modified "
-        "only by Management or Sales contact"
-    )
-
-
-class IsManagerOrEventSupportContact(permissions.BasePermission):
-    message = (
-        "Missing credentials: "
-        "Event information can be modified "
-        "only by Management or Support contact"
-    )
-
-    def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        support_contact = obj.support_contact
-        return (
-            True
-            if request.user.role ==
-            "management" or support_contact == request.user
-            else False
-        )
-
-
 class IsManager(permissions.BasePermission):
     message = "Missing credentials: Users can be read or edited " \
               "only by Management members"
@@ -62,19 +14,55 @@ class IsManager(permissions.BasePermission):
         return True if request.user.role == "management" else False
 
 
-class IsManagerOrNoteEventSupportContact(permissions.BasePermission):
-    message = (
-        "Missing credentials: "
-        "Event information can be modified "
-        "only by Management or Support contact"
-    )
+class IsManagerOrSalesContact(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        sales_contact = obj.sales_contact
+        return (
+            True if request.user.role == "management"
+            or sales_contact == request.user
+            else False
+        )
+
+
+class IsManagerOrClientSalesContact(IsManagerOrSalesContact):
+    message = ("Client detail can be edited only by Management members "
+               "or Sales contact")
+
+
+class IsManagerOrContractSalesContact(permissions.BasePermission):
+    message = ("Contract detail can be read or edited "
+               "only by Management members or Sales contact")
+
+    def has_permission(self, request, view):
+        return False if request.user.role == "support" else True
+
+
+class IsManagerOrSupportContact(permissions.BasePermission):
+    message = ("Event can be edited only by Management members "
+               "or Support contact")
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        support_contact = obj.support_contact
+        return (
+            True if request.user.role == "management"
+            or support_contact == request.user
+            else False
+        )
+
+
+class IsManagerOrEventSupportContact(permissions.BasePermission):
+    message = ("Note can be edited only by Management members "
+               "or Support contact")
 
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
             return True
         return (
-            True
-            if request.user.role == "management"
+            True if request.user.role == "management"
             or obj.event.support_contact == request.user
             else False
         )

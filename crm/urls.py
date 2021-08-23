@@ -12,7 +12,7 @@ from .views import (
     ContractViewSet,
     EventViewSet,
     UserViewSet,
-    NotesViewSet,
+    NoteViewSet,
 )
 
 router = SimpleRouter()
@@ -23,7 +23,7 @@ router.register("events", EventViewSet, basename="events")
 router.register("users", UserViewSet, basename="users")
 
 events_router = routers.NestedSimpleRouter(router, r"events", lookup="event")
-events_router.register(r"notes", NotesViewSet, basename="notes")
+events_router.register(r"notes", NoteViewSet, basename="notes")
 
 urlpatterns = [
     path("login/", TokenObtainPairView.as_view(), name="login"),

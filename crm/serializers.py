@@ -13,72 +13,11 @@ class ClientSerializer(serializers.ModelSerializer):
         exclude = ("date_created", "date_updated")
 
 
-class SalesClientSerializer(serializers.ModelSerializer):
-    """Serializer for the list of clients as seen from a Sales account."""
-
-    class Meta:
-        model = Client
-        exclude = ("sales_contact",)
-
-
 class ContractSerializer(serializers.ModelSerializer):
     """Serializer for the list of contracts."""
     class Meta:
         model = Contract
         exclude = ("date_created", "date_updated")
-
-
-class ManagementContractSerializer(serializers.ModelSerializer):
-    """Serializer for the list of contracts as seen from a Management account."""
-
-    class Meta:
-        model = Contract
-        exclude = (
-            "sales_contact",
-            "date_created",
-            "date_updated",
-        )
-
-
-class SalesContractSerializer(serializers.ModelSerializer):
-    """Serializer for the list of contracts as seen from a Sales account."""
-
-    class Meta:
-        model = Contract
-        exclude = (
-            "sales_contact",
-            "date_created",
-            "date_updated",
-            "client",
-        )
-
-
-class EventSerializer(serializers.ModelSerializer):
-    """Serializer for the list of events."""
-
-    class Meta:
-        model = Event
-        exclude = ("date_created", "date_updated")
-
-
-class SupportEventSerializer(serializers.ModelSerializer):
-    """Serializer for the list of events as seen from a Support account."""
-
-    class Meta:
-        model = Event
-        exclude = ("date_created", "date_updated", "support_contact", "client")
-
-
-class ManagementEventSerializer(serializers.ModelSerializer):
-    """Serializer for the list of events as seen from a Management account."""
-
-    class Meta:
-        model = Event
-        exclude = (
-            "date_created",
-            "date_updated",
-            "client",
-        )
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -87,7 +26,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["id", "username", "role", "password"]
-        extra_kwargs = {'password': {'write_only': True}}
+        extra_kwargs = {"password": {"write_only": True}}
 
     def create(self, validated_data):
         instance = self.Meta.model(**validated_data)
@@ -110,13 +49,12 @@ class NoteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Note
-        fields = "__all__"
+        fields = ["id", "description"]
 
 
-class ManagementAndSupportNoteSerializer(serializers.ModelSerializer):
-    """Serializer for the list of events as seen from a Management account
-    or a Support account."""
+class EventSerializer(serializers.ModelSerializer):
+    """Serializer for the list of events."""
 
     class Meta:
-        model = Note
-        exclude = ("event",)
+        model = Event
+        exclude = ("date_created", "date_updated")
