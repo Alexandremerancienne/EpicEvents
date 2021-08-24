@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "accounts.apps.AccountsConfig",
-    "crm.apps.ApiConfig",
+    "crm.apps.CrmConfig",
     "rest_framework",
     "rest_framework_simplejwt",
     "django_filters",
