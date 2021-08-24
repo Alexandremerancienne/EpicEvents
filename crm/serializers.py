@@ -1,8 +1,8 @@
 from rest_framework import serializers
 
-from .models import Client, Contract, Event, Note
-
 from accounts.models import User
+
+from .models import Client, Contract, Event, Note
 
 
 class ClientSerializer(serializers.ModelSerializer):

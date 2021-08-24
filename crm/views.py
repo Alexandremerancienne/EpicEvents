@@ -1,46 +1,25 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, status
+from django_filters import rest_framework as filters
+from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from accounts.models import User
-from .filters import (
-    ClientFilter,
-    ContractFilter,
-    EventFilter,
-    UserFilter,
-    NoteFilter
-)
-from .models import Client, Contract, Event, Note
-from .permissions import (
-    IsManagerOrClientSalesContact,
-    IsManagerOrContractSalesContact,
-    IsManagerOrSupportContact,
-    IsManager,
-    IsManagerOrEventSupportContact,
-)
-from .serializers import (
-    ClientSerializer,
-    ContractSerializer,
-    EventSerializer,
-    UserSerializer,
-    NoteSerializer,
-)
-from .exceptions import (
-    NotInChargeOfClient,
-    NotInChargeOfContract,
-    NotInChargeOfEvent,
-    NotSalesMember,
-    NotSupportMember,
-    EventOver,
-    ContractAlreadySigned,
-    ContractMustBeSigned,
-    CannotUpdateProfile,
-    CannotCreateNote,
-    CannotCreateClient,
-)
 
-from django_filters import rest_framework as filters
+from .exceptions import (CannotCreateClient, CannotCreateNote,
+                         CannotUpdateProfile, ContractAlreadySigned,
+                         ContractMustBeSigned, EventOver, NotInChargeOfClient,
+                         NotInChargeOfContract, NotInChargeOfEvent,
+                         NotSalesMember, NotSupportMember)
+from .filters import (ClientFilter, ContractFilter, EventFilter, NoteFilter,
+                      UserFilter)
+from .models import Client, Contract, Event, Note
+from .permissions import (IsManager, IsManagerOrClientSalesContact,
+                          IsManagerOrContractSalesContact,
+                          IsManagerOrEventSupportContact,
+                          IsManagerOrSupportContact)
+from .serializers import (ClientSerializer, ContractSerializer,
+                          EventSerializer, NoteSerializer, UserSerializer)
 
 
 class ClientViewSet(viewsets.ModelViewSet):
