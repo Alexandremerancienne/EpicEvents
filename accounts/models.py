@@ -14,3 +14,4 @@ class User(AbstractUser):
         blank=True,
         help_text="Role (Management, Sales, Support)",
     )
+    is_staff = models.BooleanField(default=True)
