@@ -6,18 +6,37 @@ from rest_framework.response import Response
 
 from accounts.models import User
 
-from .exceptions import (CannotCreateClient, CannotCreateNote,
-                         CannotUpdateProfile, ContractAlreadySigned,
-                         ContractMustBeSigned, EventOver, NotInChargeOfClient,
-                         NotInChargeOfContract, NotInChargeOfEvent,
-                         NotSalesMember, NotSupportMember)
-from .filters import (ClientFilter, ContractFilter, EventFilter, NoteFilter,
-                      UserFilter)
+from .exceptions import (
+    CannotCreateClient,
+    CannotCreateNote,
+    CannotUpdateProfile,
+    ContractAlreadySigned,
+    ContractMustBeSigned,
+    EventOver,
+    NotInChargeOfClient,
+    NotInChargeOfContract,
+    NotInChargeOfEvent,
+    NotSalesMember,
+    NotSupportMember
+)
+
+from .filters import (
+    ClientFilter,
+    ContractFilter,
+    EventFilter,
+    NoteFilter,
+    UserFilter)
+
 from .models import Client, Contract, Event, Note
-from .permissions import (IsManager, IsManagerOrClientSalesContact,
-                          IsManagerOrContractSalesContact,
-                          IsManagerOrEventSupportContact,
-                          IsManagerOrSupportContact)
+
+from .permissions import (
+    IsManager,
+    IsManagerOrClientSalesContact,
+    IsManagerOrContractSalesContact,
+    IsManagerOrEventSupportContact,
+    IsManagerOrSupportContact
+)
+
 from .serializers import (ClientSerializer, ContractSerializer,
                           EventSerializer, NoteSerializer, UserSerializer)
 
