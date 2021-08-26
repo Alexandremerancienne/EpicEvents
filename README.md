@@ -40,7 +40,10 @@ This locally-executable API can be installed and executed from using the followi
 4.	Activate your venv.
 5.	Install project dependencies listed in requirements.txt file : `pip install -r requirements.txt`.
 6.	Create a superuser to generate a user profile: `python manage.py createsuperuser`.
-7.	Run the server with python manage.py runserver.
+7.	You can consume the API with the newly created superuser, or with another user created with the superuser.
+8.	Migrate the data: `python manage.py migrate`.
+9.	Run the server: `python manage.py runserver`.  
+
 When the server is running after step 7 of the procedure, the CRM can be requested after login from the endpoint [http://localhost:8000/crm/v1/login/](http://localhost:8000/crm/v1/login/).
 
 # Usage and detailed endpoint documentation
