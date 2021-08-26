@@ -1,4 +1,7 @@
+from datetime import datetime
+
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django_filters import rest_framework as filters
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
@@ -17,7 +20,8 @@ from .exceptions import (
     NotInChargeOfContract,
     NotInChargeOfEvent,
     NotSalesMember,
-    NotSupportMember
+    NotSupportMember,
+    ObsoleteDate
 )
 
 from .filters import (
@@ -25,7 +29,8 @@ from .filters import (
     ContractFilter,
     EventFilter,
     NoteFilter,
-    UserFilter)
+    UserFilter
+)
 
 from .models import Client, Contract, Event, Note
 
@@ -37,8 +42,25 @@ from .permissions import (
     IsManagerOrSupportContact
 )
 
-from .serializers import (ClientSerializer, ContractSerializer,
-                          EventSerializer, NoteSerializer, UserSerializer)
+from .serializers import (
+    ClientSerializer,
+    ContractSerializer,
+    EventSerializer,
+    NoteSerializer,
+    UserSerializer
+)
+
+current_date = datetime.now()
+aware_date = timezone.make_aware(current_date)
+
+
+def check_date(string):
+    payment_due = string.split("T")
+    payment_due = " ".join(payment_due)
+    payment_due = datetime.strptime(payment_due, "%Y-%m-%d %H:%M")
+    payment_due = timezone.make_aware(payment_due)
+    if payment_due < aware_date:
+        raise ObsoleteDate()
 
 
 class ClientViewSet(viewsets.ModelViewSet):
@@ -172,6 +194,8 @@ class ContractViewSet(viewsets.ModelViewSet):
             new_event = Event(client=client, attendees=0)
             new_event.save()
 
+        check_date(request_copy["payment_due"])
+
         serializer = ContractSerializer(data=request_copy)
         serializer.is_valid(raise_exception=True)
         serializer.save(sales_contact=user)
@@ -194,6 +218,8 @@ class ContractViewSet(viewsets.ModelViewSet):
             request_copy["client"] = contract.client.id
             client = get_object_or_404(Client, id=request_copy["client"])
         request_copy["sales_contact"] = client.sales_contact.id
+
+        check_date(request_copy["payment_due"])
 
         self.check_object_permissions(request, contract)
         serializer = ContractSerializer(contract, data=request_copy)
@@ -264,11 +290,20 @@ class EventViewSet(viewsets.ModelViewSet):
             if event.event_over and "status" not in request_copy.keys():
                 raise EventOver()
 
+        check_date(request_copy["event_date"])
+
         self.check_object_permissions(request, event)
         serializer = EventSerializer(event, data=request_copy)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+
+    def destroy(self, request, pk=None):
+        user = request.user
+        event = get_object_or_404(Event, id=pk)
+        if user.role == "support":
+            if event.event_over:
+                raise EventOver()
 
 
 class NoteViewSet(viewsets.ModelViewSet):
@@ -290,10 +325,13 @@ class NoteViewSet(viewsets.ModelViewSet):
         event = get_object_or_404(Event, id=event_pk)
         queryset = Note.objects.filter(event_id=event_pk)
         if user.role == "sales":
+            events = Event.objects.filter(id=event_pk,
+                                          client__sales_contact=user)
             queryset = queryset.filter(event__client__sales_contact=user)
         elif user.role == "support":
             queryset = queryset.filter(event__support_contact=user)
-        if event is not None and queryset.count() == 0:
+            events = Event.objects.filter(id=event_pk, support_contact=user)
+        if event is not None and events.count() == 0:
             raise NotInChargeOfEvent()
 
         queryset = self.filter_queryset(queryset).order_by("id")
@@ -321,15 +359,27 @@ class NoteViewSet(viewsets.ModelViewSet):
         if user.role == "sales":
             raise CannotCreateNote()
         elif user.role == "support":
-            queryset = Note.objects.filter(event_id=event_pk,
-                                           event__support_contact=user)
+            queryset = Event.objects.filter(id=event_pk,
+                                            support_contact=user)
             if event is not None and queryset.count() == 0:
                 raise NotInChargeOfEvent()
+            if event.event_over:
+                raise EventOver()
 
         serializer = NoteSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(event=event)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def destroy(self, request, event_pk=None, pk=None):
+        user = request.user
+        note = get_object_or_404(Note, event_id=event_pk, id=pk)
+        if user.role == "support":
+            if note.event.event_over:
+                raise EventOver()
+            self.check_object_permissions(request, note)
+            self.perform_destroy(note)
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class UserViewSet(viewsets.ModelViewSet):

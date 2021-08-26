@@ -69,7 +69,8 @@ class ContractMustBeSigned(APIException):
 
 class EventOver(APIException):
     status_code = 403
-    default_detail = "Event over. To update status, please contact Management."
+    default_detail = "Event over. " \
+                     "To update or delete, please contact Management."
     default_code = "event_over"
 
 
@@ -81,3 +82,12 @@ class ContractAlreadySigned(APIException):
         "To terminate contract, please delete it."
     )
     default_code = "contract_already_signed"
+
+
+class ObsoleteDate(APIException):
+    status_code = 403
+    default_detail = (
+        "Obsolete date. "
+        "Please choose another date in the future."
+    )
+    default_code = "obsolete_date"

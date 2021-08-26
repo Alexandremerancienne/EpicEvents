@@ -24,13 +24,16 @@ class ClientFilter(filters.FilterSet):
                                     lookup_expr="iexact")
     last_name = filters.CharFilter(field_name="last_name",
                                    lookup_expr="iexact")
+    last_name__contains = filters.CharFilter(field_name="last_name",
+                                             lookup_expr="icontains")
     company = filters.CharFilter(field_name="company",
                                  lookup_expr="iexact")
 
     class Meta:
         model = Client
         fields = ["first_name", "first_name__contains",
-                  "last_name", "company", "sales_contact"]
+                  "last_name__contains", "last_name",
+                  "company", "sales_contact"]
 
 
 class ContractFilter(filters.FilterSet):
