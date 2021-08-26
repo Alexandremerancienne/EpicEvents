@@ -53,7 +53,7 @@ One you have launched the server and opened a session, you can read the document
 * CRM clients: [http://localhost:8000/crm/v1/clients/](http://localhost:8000/crm/v1/clients/)
 * CRM contracts: [http://localhost:8000/crm/v1/contracts/](http://localhost:8000/crm/v1/contracts/)
 * CRM events: [http://localhost:8000/crm/v1/events/](http://localhost:8000/crm/v1/events/)
-* CRM notes: [http://localhost:8000/crm/v1/notes/](http://localhost:8000/crm/v1/events/<event_id>/notes/)  
+* CRM notes: [http://localhost:8000/crm/v1/events/{event_id}/notes/](http://localhost:8000/crm/v1/events/{event_id}/notes/)  
 
 All these endpoints support HTTP requests using GET, POST, PUT and DELETE methods:
 
@@ -88,7 +88,7 @@ You can search and filter events with the following endpoint: http://localhost:8
 * `support_contact=<integer>` to get events filtered by support contact. The search does an exact match of the identification number (id) of the support contact.
 
 ## Search and filter notes
-You can search and filter notes with the following endpoint: http://localhost:8000/crm/v1/events/<event_id>/notes/. The filters available are:
+You can search and filter notes with the following endpoint: http://localhost:8000/crm/v1/events/{event_id}/notes/. The filters available are:
 * `description__contains=<string>` to search notes whose description contains the search term. The search is independent of character case.
 
 # Endpoints test
