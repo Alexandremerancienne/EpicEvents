@@ -303,9 +303,11 @@ class EventViewSet(viewsets.ModelViewSet):
     def destroy(self, request, pk=None):
         user = request.user
         event = get_object_or_404(Event, id=pk)
-        if user.role == "support":
-            if event.event_over:
-                raise EventOver()
+        if user.role == "support" and event.event_over:
+            raise EventOver()
+        self.check_object_permissions(request, event)
+        self.perform_destroy(event)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class NoteViewSet(viewsets.ModelViewSet):
@@ -325,14 +327,14 @@ class NoteViewSet(viewsets.ModelViewSet):
     def list(self, request, event_pk=None):
         user = request.user
         event = get_object_or_404(Event, id=event_pk)
+        events = Event.objects.filter(id=event_pk)
         queryset = Note.objects.filter(event_id=event_pk)
         if user.role == "sales":
-            events = Event.objects.filter(id=event_pk,
-                                          client__sales_contact=user)
+            events = events.filter(client__sales_contact=user)
             queryset = queryset.filter(event__client__sales_contact=user)
         elif user.role == "support":
             queryset = queryset.filter(event__support_contact=user)
-            events = Event.objects.filter(id=event_pk, support_contact=user)
+            events = events.filter(support_contact=user)
         if event is not None and events.count() == 0:
             raise NotInChargeOfEvent()
 
@@ -379,9 +381,9 @@ class NoteViewSet(viewsets.ModelViewSet):
         if user.role == "support":
             if note.event.event_over:
                 raise EventOver()
-            self.check_object_permissions(request, note)
-            self.perform_destroy(note)
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        self.check_object_permissions(request, note)
+        self.perform_destroy(note)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class UserViewSet(viewsets.ModelViewSet):
