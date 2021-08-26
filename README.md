@@ -69,6 +69,7 @@ You can search and filter users with the following endpoint: http://localhost:80
 You can search and filter clients with the following endpoint: http://localhost:8000/crm/v1/clients/. The filters available are:
 * `first_name__contains=<string>` to search clients whose first name contains the search term. The search is independent of character case.
 * `first_name=<first name>` to get clients filtered by first name. The search does an exact match of the first name.
+* * `last_name__contains=<string>` to search clients whose last name contains the search term. The search is independent of character case.
 * `last_name=<last name>` to get clients filtered by last name. The search does an exact match of the last name.
 * `company=<company>` to get clients filtered by company. The search does an exact match of the company name.
 * `sales_contact=<integer>` to get clients filtered by sales contact. The search does an exact match of the identification number (id) of the sales contact.
