@@ -194,7 +194,8 @@ class ContractViewSet(viewsets.ModelViewSet):
             new_event = Event(client=client, attendees=0)
             new_event.save()
 
-        check_date(request_copy["payment_due"])
+        if "payment_due" in request_copy.keys():
+            check_date(request_copy["payment_due"])
 
         serializer = ContractSerializer(data=request_copy)
         serializer.is_valid(raise_exception=True)
@@ -219,7 +220,8 @@ class ContractViewSet(viewsets.ModelViewSet):
             client = get_object_or_404(Client, id=request_copy["client"])
         request_copy["sales_contact"] = client.sales_contact.id
 
-        check_date(request_copy["payment_due"])
+        if "payment_due" in request_copy.keys():
+            check_date(request_copy["payment_due"])
 
         self.check_object_permissions(request, contract)
         serializer = ContractSerializer(contract, data=request_copy)
@@ -274,6 +276,7 @@ class EventViewSet(viewsets.ModelViewSet):
     def update(self, request, pk=None):
         user = request.user
         event = get_object_or_404(Event, id=pk)
+        request_copy = request.data.copy()
         if user.role == "management":
             support_contact_id = request.data["support_contact"]
             support_contact = User.objects.filter(id=support_contact_id)
@@ -281,16 +284,15 @@ class EventViewSet(viewsets.ModelViewSet):
             if support_contact.role != "support":
                 raise NotSupportMember()
             else:
-                request_copy = request.data.copy()
                 request_copy["client"] = event.client.id
         elif user.role == "support":
-            request_copy = request.data.copy()
             request_copy.update({"client": event.client.id,
                                  "support_client": user.id})
             if event.event_over and "status" not in request_copy.keys():
                 raise EventOver()
 
-        check_date(request_copy["event_date"])
+        if "event_date" in request_copy.keys():
+            check_date(request_copy["event_date"])
 
         self.check_object_permissions(request, event)
         serializer = EventSerializer(event, data=request_copy)
