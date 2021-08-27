@@ -375,6 +375,21 @@ class NoteViewSet(viewsets.ModelViewSet):
         serializer.save(event=event)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    def update(self, request, event_pk=None, pk=None):
+        user = request.user
+        note = get_object_or_404(Note, event_id=event_pk,
+                                 id=pk)
+        request_copy = request.data.copy()
+        if user.role == "support":
+            if note.event.event_over:
+                raise EventOver()
+
+        self.check_object_permissions(request, note)
+        serializer = NoteSerializer(note, data=request_copy)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
     def destroy(self, request, event_pk=None, pk=None):
         user = request.user
         note = get_object_or_404(Note, event_id=event_pk, id=pk)
