@@ -195,7 +195,8 @@ class ContractViewSet(viewsets.ModelViewSet):
             new_event.save()
 
         if "payment_due" in request_copy.keys():
-            check_date(request_copy["payment_due"])
+            if len(request_copy["payment_due"]) > 1:
+                check_date(request_copy["payment_due"])
 
         serializer = ContractSerializer(data=request_copy)
         serializer.is_valid(raise_exception=True)
@@ -221,7 +222,8 @@ class ContractViewSet(viewsets.ModelViewSet):
         request_copy["sales_contact"] = client.sales_contact.id
 
         if "payment_due" in request_copy.keys():
-            check_date(request_copy["payment_due"])
+            if len(request_copy["payment_due"]) > 1:
+                check_date(request_copy["payment_due"])
 
         self.check_object_permissions(request, contract)
         serializer = ContractSerializer(contract, data=request_copy)
@@ -292,7 +294,8 @@ class EventViewSet(viewsets.ModelViewSet):
                 raise EventOver()
 
         if "event_date" in request_copy.keys():
-            check_date(request_copy["event_date"])
+            if len(request_copy["event_date"]) > 1:
+                check_date(request_copy["event_date"])
 
         self.check_object_permissions(request, event)
         serializer = EventSerializer(event, data=request_copy)
